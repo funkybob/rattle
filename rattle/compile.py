@@ -74,6 +74,7 @@ class TokenInfo(namedtuple('TokenInfo', 'type string start end line')):
 def token_stream(content):
     '''Fix the hole in Py2, change token types to their real types'''
     for token in generate_tokens(StringIO(content).readline):
+        print token
         yield TokenInfo(*token)
 
 def _context_lookup(x):
@@ -92,20 +93,25 @@ def _make_number(tok):
         val = int(tok.string)
     return ast.Num(n=val)
 
-def parse_expr(content):
-    '''Turn a content string into AST'''
-    stream = token_stream(content)
+def _convert_name_or_literal(tok):
 
-    # First token MUST be either a literal, or name
-    tok = next(stream)
     if tok.exact_type == STRING:
-        code = ast.Str(s=tok.string)
+        code = ast.Str(s=tok.string[1:-1])
     elif tok.exact_type == NUMBER:
         code = _make_number(tok)
     elif tok.exact_type == NAME:
         code = _context_lookup(tok.string)
     else:
         raise TemplateSyntaxError(content)
+    return code
+
+def parse_expr(content):
+    '''Turn a content string into AST'''
+    stream = token_stream(content)
+
+    # First token MUST be either a literal, or name
+    tok = next(stream)
+    code = _convert_name_or_literal(tok)
 
     for tok in stream:
         if tok.exact_type == ENDMARKER:
@@ -116,6 +122,18 @@ def parse_expr(content):
                 raise TemplateSyntaxError(content)
             attr = tok.string
             code = ast.Attribute(value=code, attr=attr, ctx=ast.Load())
+        elif tok.exact_type == LSQB:  # [
+            tok = next(stream)
+            lookup = _convert_name_or_literal(tok)
+            print lookup
+            code = ast.Subscript(
+                value=code,
+                slice=ast.Index(value=lookup, ctx=ast.Load()),
+                ctx=ast.Load()
+            )
+            tok = next(stream)
+            if not tok.exact_type == RSQB:
+                raise TemplateSyntaxError('Expected ], found: %r' % tok)
         else:
             raise TemplateSyntaxError('Found unexpected token %r', tok)
     return code
