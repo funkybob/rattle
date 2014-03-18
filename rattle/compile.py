@@ -93,7 +93,7 @@ def _make_number(tok):
     return ast.Num(n=val)
 
 def _convert_name_or_literal(tok):
-
+    '''Turn STRING, NUMBER or NAME tokens into equivalent AST node.'''
     if tok.exact_type == STRING:
         code = ast.Str(s=tok.string[1:-1])
     elif tok.exact_type == NUMBER:
@@ -130,7 +130,7 @@ def parse_expr(content):
                 ctx=ast.Load()
             )
             tok = next(stream)
-            if not tok.exact_type == RSQB:
+            if not tok.exact_type == RSQB: # ]
                 raise TemplateSyntaxError('Expected ], found: %r' % tok)
         else:
             raise TemplateSyntaxError('Found unexpected token %r', tok)
