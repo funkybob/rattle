@@ -1,7 +1,6 @@
 
 import re
 
-
 TOKEN_TEXT = 0
 TOKEN_VAR = 1
 TOKEN_BLOCK = 2
@@ -24,26 +23,33 @@ class Token(object):
     def __repr__(self):
         return u'{%s} %s' % (TOKEN_MAPPING[self.mode], self.content,)
 
-tag_re = re.compile(r'{%\s*(?P<tag>.+?)\s*%}|{{\s*(?P<var>.+?)\s*}}|{#\s*(?P<comment>.+?)\s*#}')
+    def _position(self, node):
+        '''Annotate an AST node with this token's row/col'''
+        node.lineno = self.line
+        node.col_offset = self.col
+        return node
 
+tag_re = re.compile(r'{%\s*(?P<tag>.+?)\s*%}|{{\s*(?P<var>.+?)\s*}}|{#\s*(?P<comment>.+?)\s*#}')
                 
 def tokenise(template):
     '''A generator which yields Token instances'''
     # XXX Add line number tracking
     # XXX Add line, col tracking to tokens
     upto = 0
+    lineno = 0
     for m in tag_re.finditer(template):
         start, end = m.span()
         if upto < start:
-            yield Token(TOKEN_TEXT, template[upto:start], col=upto)
-        upto = end
+            yield Token(TOKEN_TEXT, template[upto:start], line=lineno, col=upto)
         tag, var, comment = m.groups()
         if tag is not None:
-            yield Token(TOKEN_BLOCK, tag, col=start)
+            yield Token(TOKEN_BLOCK, tag, line=lineno, col=start)
         elif var is not None:
-            yield Token(TOKEN_VAR, var, col=start)
+            yield Token(TOKEN_VAR, var, line=lineno, col=start)
         else:
-            yield Token(TOKEN_COMMENT, comment, col=start)
+            yield Token(TOKEN_COMMENT, comment, line=lineno, col=start)
+        lineno += template[upto:end].count('\n')
+        upto = end
     if upto < len(template):
-        yield Token(TOKEN_TEXT, template[upto:], col=start)
+        yield Token(TOKEN_TEXT, template[upto:], line=lineno, col=start)
 
