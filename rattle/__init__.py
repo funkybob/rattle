@@ -1,2 +1,2 @@
 
-from compiler import Template
+from compile import Template
