@@ -5,7 +5,7 @@ from tokenize import *
 from collections import namedtuple
 from StringIO import StringIO
 
-from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR
+from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
 
 class TemplateSyntaxError(Exception):
     pass
@@ -137,6 +137,14 @@ def parse_expr(content):
     return code
 
 
+def parse_block_tag(content, stream):
+    parts = token_stream(content)
+
+    tok = next(parts)
+    if tok.exact_type != NAME:
+        raise TemplateSyntaxError("Expected NAME: found %r" % tok)
+
+
 class Template(object):
     def __init__(self, source):
         self.source = source
@@ -145,28 +153,36 @@ class Template(object):
         ast.fix_missing_locations(code)
         self.func = compile(code, filename="<template>", mode="exec")
 
+    def _token_to_code(self, token):
+        '''Given a Token instance, convert it to AST'''
+        code = None
+        if token.mode == TOKEN_TEXT:
+            code = ast.Str(s=token.content)
+        elif token.mode == TOKEN_VAR:
+            # parse
+            code = parse_expr(token.content)
+        elif token.mode == TOKEN_BLOCK:
+            # Parse args/kwargs
+            parse_block_tag(token.content, self.stream)
+            # create tag class instance
+        else:
+            # Must be a comment
+            pass
+
+        if code is not None:
+            return token._position(code)
+
     def parse(self):
         '''Convert the parsed tokens into a list of expressions
         Then join them'''
         steps = []
-        for token in tokenise(self.source):
-            if token.mode == TOKEN_TEXT:
-                steps.append(
-                    token._position(ast.Str(s=token.content))
-                )
-            elif token.mode == TOKEN_VAR:
-                # parse
-                steps.append(
-                    token._position(parse_expr(token.content))
-                )
-            elif token.mode == TOKEN_BLOCK:
-                # Parse args/kwargs
-                # create tag class instance
-                pass
-            else:
-                # Must be a comment
-                pass
+        self.stream = tokenise(self.source)
+        for token in self.stream:
+            code = self._token_to_code(token)
+            if code is not None:
+                steps.append(code)
 
+        # result = [str(x) for x in steps]
         return ast.Module(
             body=[ast.Assign(
                 targets=[ast.Name(id='result', ctx=ast.Store())],
