@@ -143,7 +143,7 @@ def parse_expr(content):
     # First token MUST be either a literal, or name
     tok = next(stream)
     if tok.exact_type == STRING:
-        code = ast.String(s=tok.string)
+        code = ast.Str(s=tok.string)
     elif tok.exact_type == NUMBER:
         code = _make_number(tok)
     elif tok.exact_type == NAME:
@@ -156,12 +156,9 @@ def parse_expr(content):
             break
         if tok.exact_type == DOT:
             tok = next(stream)
-            if tok.exact_type == NUMBER:
-                attr = _make_number(tok)
-            elif tok.exact_type == NAME:
-                attr = ast.String(s=tok.string)
-            else:
+            if not tok.exact_type == NAME:
                 raise TemplateSyntaxError(content)
+            attr = s=tok.string
             code = ast.Attribute(value=code, attr=attr, ctx=ast.Load())
         else:
             raise TemplateSyntaxError('Found unexpected token %r', tok)
