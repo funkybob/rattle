@@ -74,7 +74,6 @@ class TokenInfo(namedtuple('TokenInfo', 'type string start end line')):
 def token_stream(content):
     '''Fix the hole in Py2, change token types to their real types'''
     for token in generate_tokens(StringIO(content).readline):
-        print token
         yield TokenInfo(*token)
 
 def _context_lookup(x):
@@ -125,7 +124,6 @@ def parse_expr(content):
         elif tok.exact_type == LSQB:  # [
             tok = next(stream)
             lookup = _convert_name_or_literal(tok)
-            print lookup
             code = ast.Subscript(
                 value=code,
                 slice=ast.Index(value=lookup, ctx=ast.Load()),
@@ -154,12 +152,12 @@ class Template(object):
         for token in tokenise(self.source):
             if token.mode == TOKEN_TEXT:
                 steps.append(
-                    ast.Str(s=token.content)
+                    token._position(ast.Str(s=token.content))
                 )
             elif token.mode == TOKEN_VAR:
                 # parse
                 steps.append(
-                    parse_expr(token.content)
+                    token._position(parse_expr(token.content))
                 )
             elif token.mode == TOKEN_BLOCK:
                 # Parse args/kwargs
