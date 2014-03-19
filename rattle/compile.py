@@ -144,6 +144,15 @@ def parse_block_tag(content, stream):
     if tok.exact_type != NAME:
         raise TemplateSyntaxError("Expected NAME: found %r" % tok)
 
+    # Parse args
+    # Parse kwargs
+    for tok in parts:
+        if tok.exact_type != NAME:
+            break
+        key = tok.string
+        tok = next(parts)
+        if tok.exact_type != EQUAL:
+            pass
 
 class Template(object):
     def __init__(self, source):
