@@ -71,10 +71,24 @@ class TokenInfo(namedtuple('TokenInfo', 'type string start end line')):
             return self.type
 ###
 
-def token_stream(content):
-    '''Fix the hole in Py2, change token types to their real types'''
-    for token in generate_tokens(StringIO(content).readline):
-        yield TokenInfo(*token)
+class TokenStream(object):
+    def __init__(self, content):
+        self.stream = generate_tokens(StringIO(content).readline)
+        self.stack = []
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        try:
+            return self.stack.pop()
+        except IndexError:
+            token = next(self.stream)
+            return TokenInfo(*token)
+
+    def push(self, token):
+        self.stack.append(token)
+
 
 def _context_lookup(x):
     '''Return AST for looking up x in the Context'''
@@ -101,12 +115,11 @@ def _convert_name_or_literal(tok):
     elif tok.exact_type == NAME:
         code = _context_lookup(tok.string)
     else:
-        raise TemplateSyntaxError(content)
+        raise TemplateSyntaxError(tok)
     return code
 
-def parse_expr(content):
+def parse_expr(stream, nested=False):
     '''Turn a content string into AST'''
-    stream = token_stream(content)
 
     # First token MUST be either a literal, or name
     tok = next(stream)
@@ -122,8 +135,7 @@ def parse_expr(content):
             attr = tok.string
             code = ast.Attribute(value=code, attr=attr, ctx=ast.Load())
         elif tok.exact_type == LSQB:  # [
-            tok = next(stream)
-            lookup = _convert_name_or_literal(tok)
+            lookup = parse_expr(stream, nested=True)
             code = ast.Subscript(
                 value=code,
                 slice=ast.Index(value=lookup, ctx=ast.Load()),
@@ -132,13 +144,16 @@ def parse_expr(content):
             tok = next(stream)
             if not tok.exact_type == RSQB: # ]
                 raise TemplateSyntaxError('Expected ], found: %r' % tok)
+        elif tok.exact_type == RSQB and nested:
+            stream.push(tok)
+            break
         else:
             raise TemplateSyntaxError('Found unexpected token %r', tok)
     return code
 
 
 def parse_block_tag(content, stream):
-    parts = token_stream(content)
+    parts = TokenStream(content)
 
     tok = next(parts)
     if tok.exact_type != NAME:
@@ -169,7 +184,8 @@ class Template(object):
             code = ast.Str(s=token.content)
         elif token.mode == TOKEN_VAR:
             # parse
-            code = parse_expr(token.content)
+            stream = TokenStream(token.content)
+            code = parse_expr(stream)
         elif token.mode == TOKEN_BLOCK:
             # Parse args/kwargs
             parse_block_tag(token.content, self.stream)
