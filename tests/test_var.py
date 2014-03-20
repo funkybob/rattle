@@ -17,6 +17,8 @@ class VariableSyntaxTest(unittest.TestCase):
         ('{{ a["b"] }}', {'a': {'b': 'yes'}}, 'yes'),
         ('{{ a[c] }}', {'a': {'b': 'yes', 'c': 'no'}, 'c': 'b'}, 'yes'),
         ('{{ a["b"].c }}', {'a': {'b': Mock(c=1)}}, '1'),
+        ('{{ a(1) }}', {'a': lambda x: x}, '1'),
+        ('{{ a(b,1) }}', {'a': lambda x, y: x + y, 'b': 6}, '7'),
     )
 
     def test_rendering(self):
