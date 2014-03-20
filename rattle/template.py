@@ -67,7 +67,7 @@ class Template(object):
             )
         )
 
-    def render(self, context):
+    def render(self, context={}):
         return u''.join(eval(self.func, {}, {
             'context': context,
         }))
