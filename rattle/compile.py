@@ -118,7 +118,7 @@ def _convert_name_or_literal(tok):
         raise TemplateSyntaxError(tok)
     return code
 
-def parse_expr(stream, nested=False):
+def parse_expr(stream):
     '''Turn a content string into AST'''
 
     # First token MUST be either a literal, or name
@@ -135,7 +135,7 @@ def parse_expr(stream, nested=False):
             attr = tok.string
             code = ast.Attribute(value=code, attr=attr, ctx=ast.Load())
         elif tok.exact_type == LSQB:  # [
-            lookup = parse_expr(stream, nested=True)
+            lookup = parse_expr(stream)
             code = ast.Subscript(
                 value=code,
                 slice=ast.Index(value=lookup, ctx=ast.Load()),
@@ -144,11 +144,12 @@ def parse_expr(stream, nested=False):
             tok = next(stream)
             if not tok.exact_type == RSQB: # ]
                 raise TemplateSyntaxError('Expected ], found: %r' % tok)
-        elif tok.exact_type == RSQB and nested:
+        #elif tok.exact_type == LPAREN:
+            # parse arguments
+            # Ensure last token is RPAREN
+        else:
             stream.push(tok)
             break
-        else:
-            raise TemplateSyntaxError('Found unexpected token %r', tok)
     return code
 
 
