@@ -11,8 +11,8 @@ lg.add('LSQB', '\[')
 lg.add('RSQB', '\]')
 lg.add('LPAREN', '\(')
 lg.add('RPAREN', '\)')
-#lg.add('EQUALS', '=')
-#lg.add('COMMA', ',')
+lg.add('EQUALS', '=')
+lg.add('COMMA', ',')
 lg.add('DOT', '\.')
 
 
@@ -41,6 +41,20 @@ expr    :   NAME
         :   expr LPAREN kwarg_list RPAREN
         :   expr LPAREN arg_list COMMA kwarg_list RPAREN
 '''
+
+@pg.production('arg : expr')
+def arg_expr(p):
+    return p[0]
+
+@pg.production('arg_list : arg')
+def arg_list_arg(p):
+    return p
+
+@pg.production('arg_list : arg COMMA arg_list')
+def arg_list_prepend(p):
+    arg, _, arg_list = p
+    arg_list.insert(0, arg)
+    return arg_list
 
 @pg.production('expr : NAME')
 def expr_NAME(p):
@@ -83,6 +97,16 @@ def expr_empty_call(p):
     return ast.Call(
         func=func,
         args=[],
+        keywords=[],
+    )
+
+@pg.production('expr : expr LPAREN arg_list RPAREN')
+def expr_args_cll(p):
+    func, _, args, _ = p
+    print "CALL: %r" % p
+    return ast.Call(
+        func=func,
+        args=args,
         keywords=[],
     )
 
