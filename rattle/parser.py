@@ -26,6 +26,9 @@ pg = rply.ParserGenerator(
 
 kwarg   :   NAME EQUALS expr
 
+kwarwg_list :   kwarg
+            |   kwarg COMMA kwarg_list
+
 arg     :   expr
 
 arg_list    :   arg
@@ -41,6 +44,21 @@ expr    :   NAME
         :   expr LPAREN kwarg_list RPAREN
         :   expr LPAREN arg_list COMMA kwarg_list RPAREN
 '''
+
+@pg.production('kwarg : NAME EQUALS expr')
+def keyword(p):
+    name, _, expr = p
+    return ask.keyword(arg=name.getstr(), value=expr)
+
+@pg.production('kwarg_list : kwarg')
+def kwarg_list_kwarg(p):
+    return p
+
+@pg.production('kwarg_list : kwarg COMMA kwarg_list')
+def kwarg_list_prepend(p):
+    kwarg, _, kwarg_list = p
+    kwarg_list.insert(0, kwarg)
+    return kwarg_list
 
 @pg.production('arg : expr')
 def arg_expr(p):
@@ -91,24 +109,32 @@ def expr_SUBSCRIPT(p):
         ctx=ast.Load(),
     )
 
+def _build_call(func, args=[], kwargs=[]):
+    return ast.Call(
+        func=func,
+        args=args,
+        keywords=kwargs,
+
+    )
 @pg.production('expr : expr LPAREN RPAREN')
 def expr_empty_call(p):
     func, _, _ = p
-    return ast.Call(
-        func=func,
-        args=[],
-        keywords=[],
-    )
+    return _build_call(func)
 
 @pg.production('expr : expr LPAREN arg_list RPAREN')
 def expr_args_cll(p):
     func, _, args, _ = p
-    print "CALL: %r" % p
-    return ast.Call(
-        func=func,
-        args=args,
-        keywords=[],
-    )
+    return _build_call(func, args)
+
+@pg.production('expr : expr LPAREN kwarg_list RPAREN')
+def expr_kwargs_call(p):
+    func, _, kwargs, _ = p
+    return _build_call(func, kwargs=kwargs)
+
+@pg.production('expr : expr LPAREN arg_list COMMA kwarg_list RPAREN')
+def expr_full_call(p):
+    func, _, args, _, kwargs, _ = p
+    return _build_call(func, args, kwargs)
 
 @pg.error
 def error(token):
