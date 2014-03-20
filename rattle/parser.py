@@ -89,37 +89,3 @@ def expr_empty_call(p):
 @pg.error
 def error(token):
     raise ValueError('Unexpected token: %r' % token)
-
-if __name__ == '__main__':
-    lexer = lg.build()
-    parser = pg.build()
-
-    class Mock(object):
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-
-    TESTS = (
-        ('a', {'a': 'yes'}, 'yes'),
-        ('a.b', {'a': Mock(b='yes')}, 'yes'),
-        ('a["b"]', {'a': {'b': 'yes'}}, 'yes'),
-    )
-
-    for src, ctx, out in TESTS:
-        tokens = lexer.lex(src)
-        expr = parser.parse(iter(tokens))
-
-        src = ast.Module(body=[
-            ast.Assign(
-                targets=[ast.Name(id='result', ctx=ast.Store())],
-                value=expr,
-            )
-        ])
-        ast.fix_missing_locations(src)
-
-        code = compile(src, filename='<ast>', mode='exec')
-
-        glob = {'context': ctx}
-        exec(code, glob)
-        assert(glob['result'] == out)
-
