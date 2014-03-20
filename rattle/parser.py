@@ -26,7 +26,7 @@ pg = rply.ParserGenerator(
 
 kwarg   :   NAME EQUALS expr
 
-kwarwg_list :   kwarg
+kwarg_list :   kwarg
             |   kwarg COMMA kwarg_list
 
 arg     :   expr
@@ -48,7 +48,7 @@ expr    :   NAME
 @pg.production('kwarg : NAME EQUALS expr')
 def keyword(p):
     name, _, expr = p
-    return ask.keyword(arg=name.getstr(), value=expr)
+    return ast.keyword(arg=name.getstr(), value=expr)
 
 @pg.production('kwarg_list : kwarg')
 def kwarg_list_kwarg(p):
@@ -89,7 +89,7 @@ def expr_STRING(p):
 
 @pg.production('expr : NUMBER')
 def expr_NUMBER(p):
-    return ast.Number(n=int(p[0].getstr()))
+    return ast.Num(n=int(p[0].getstr()))
 
 @pg.production('expr : expr DOT NAME')
 def expr_DOT_NAME(p):
