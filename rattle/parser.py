@@ -23,10 +23,6 @@ pg = rply.ParserGenerator(
 )
 
 '''
-kwarg   :   NAME EQUALS expr
-
-kwarg_list  :   kwarg
-            |   kwarg COMMA kwarg_list
 
 arg     :   expr
 
@@ -42,24 +38,14 @@ expr    :   NAME
         |   expr LPAREN arg_list RPAREN
         |   expr LPAREN kwarg_list RPAREN
         |   expr LPAREN arg_list COMMA kwarg_list RPAREN
+
+kwarg   :   NAME EQUALS expr
+
+kwarg_list  :   kwarg
+            |   kwarg COMMA kwarg_list
 '''
 
 lg.ignore(r"\s+")
-
-#@pg.production('kwarg : NAME EQUALS expr')
-def keyword(p):
-    name, _, expr = p
-    return ast.keyword(arg=name, value=expr)
-
-#@pg.production('kwarg_list : kwarg')
-def kwarg_list_kwarg(p):
-    return p
-
-#@pg.production('kwarg_list : kwarg COMMA kwarg_list')
-def kwarg_list_prepend(p):
-    kwarg, _, kwarg_list = p
-    kwarg_list.insert(0, kwarg)
-    return kwarg_list
 
 @pg.production('arg : expr')
 def arg_expr(p):
@@ -127,12 +113,27 @@ def expr_args_cll(p):
     func, _, args, _ = p
     return _build_call(func, args)
 
-#@pg.production('expr : expr LPAREN kwarg_list RPAREN')
+@pg.production('kwarg : NAME EQUALS expr')
+def keyword(p):
+    name, _, expr = p
+    return ast.keyword(arg=name, value=expr)
+
+@pg.production('kwarg_list : kwarg')
+def kwarg_list_kwarg(p):
+    return p
+
+@pg.production('kwarg_list : kwarg COMMA kwarg_list')
+def kwarg_list_prepend(p):
+    kwarg, _, kwarg_list = p
+    kwarg_list.insert(0, kwarg)
+    return kwarg_list
+
+@pg.production('expr : expr LPAREN kwarg_list RPAREN')
 def expr_kwargs_call(p):
     func, _, kwargs, _ = p
     return _build_call(func, kwargs=kwargs)
 
-#@pg.production('expr : expr LPAREN arg_list COMMA kwarg_list RPAREN')
+@pg.production('expr : expr LPAREN arg_list COMMA kwarg_list RPAREN')
 def expr_full_call(p):
     func, _, args, _, kwargs, _ = p
     return _build_call(func, args, kwargs)
