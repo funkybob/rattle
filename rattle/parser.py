@@ -116,7 +116,7 @@ def expr_args_cll(p):
 @pg.production('kwarg : NAME EQUALS expr')
 def keyword(p):
     name, _, expr = p
-    return ast.keyword(arg=name, value=expr)
+    return ast.keyword(arg=name.getstr(), value=expr)
 
 @pg.production('kwarg_list : kwarg')
 def kwarg_list_kwarg(p):
