@@ -3,10 +3,7 @@ import unittest
 
 from rattle import Template
 
-class Mock(object):
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+from .utils import Mock
 
 
 class LiteralSyntaxTest(unittest.TestCase):
