@@ -1,12 +1,14 @@
 
 import ast
+import tokenize
+
 import rply
 
 lg = rply.LexerGenerator()
 
-lg.add('NUMBER', '\d+')
-lg.add('STRING', "'.*?'|\".*?\"")
-lg.add('NAME', '\w+')
+lg.add('NUMBER', tokenize.Decnumber)
+lg.add('STRING', tokenize.String)
+lg.add('NAME', tokenize.Name)
 lg.add('LSQB', '\[')
 lg.add('RSQB', '\]')
 lg.add('LPAREN', '\(')
