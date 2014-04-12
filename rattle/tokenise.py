@@ -37,6 +37,7 @@ def tokenise(template):
     # XXX Add line, col tracking to tokens
     upto = 0
     lineno = 0
+    start = 0
     for m in tag_re.finditer(template):
         start, end = m.span()
         if upto < start:
