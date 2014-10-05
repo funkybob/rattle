@@ -15,13 +15,16 @@ class TemplateTestCase(unittest.TestCase):
         try:
             self.assertEqual(actual, expected)
         except Exception as e:
-            standardMsg = e.message
+            if hasattr(e, 'message'):
+                standardMsg = e.message
+            else:
+                standardMsg = ''
             if isinstance(template, Template):
                 source = template.source
             else:
                 source = template
             msg = 'Failed rendering template %s:\n%s' % (source, standardMsg)
-            self.fail(self._formatMessage(msg, standardMsg))
+            self.fail(msg)
 
 
 class LiteralSyntaxTest(TemplateTestCase):
@@ -32,9 +35,21 @@ class LiteralSyntaxTest(TemplateTestCase):
         self.assertRendered(output, 'hello', tmpl)
 
     def test_renderNumLiteral(self):
-        tmpl = Template('{{ 23 }}')
-        output = tmpl.render()
-        self.assertRendered(output, '23', tmpl)
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 23 }}', '23'),
+
+            ('{{ 2.3 }}', '2.3'),
+            ('{{ 12.34 }}', '12.34'),
+            ('{{ 12e1 }}', '120.0'),
+            ('{{ 12E1 }}', '120.0'),
+            ('{{ 12e-1 }}', '1.2'),
+            ('{{ 12E-1 }}', '1.2'),
+        )
+        for src, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render()
+            self.assertRendered(output, expect, src)
 
 
 class VariableSyntaxTest(TemplateTestCase):
@@ -120,6 +135,12 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 1 + b }}', {'b': 2}, '3'),
             ('{{ a + b }}', {'a': 1, 'b': 2}, '3'),
             ('{{ a + a }}', {'a': 1}, '2'),
+
+            ('{{ 1.8 + 2.9 }}', {}, '4.7'),
+            ('{{ a + 2.9 }}', {'a': 1.8}, '4.7'),
+            ('{{ 1.8 + b }}', {'b': 2.9}, '4.7'),
+            ('{{ a + b }}', {'a': 1.8, 'b': 2.9}, '4.7'),
+            ('{{ a + a }}', {'a': 1.8}, '3.6'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -134,6 +155,12 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 2 - b }}', {'b': 1}, '1'),
             ('{{ a - b }}', {'a': 2, 'b': 1}, '1'),
             ('{{ a - a }}', {'a': 2}, '0'),
+
+            ('{{ 2.9 - 1.7 }}', {}, '1.2'),
+            ('{{ a - 1.7 }}', {'a': 2.9}, '1.2'),
+            ('{{ 2.9 - b }}', {'b': 1.7}, '1.2'),
+            ('{{ a - b }}', {'a': 2.9, 'b': 1.7}, '1.2'),
+            ('{{ a - a }}', {'a': 2.9}, '0.0'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -148,6 +175,12 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 2 * b }}', {'b': 3}, '6'),
             ('{{ a * b }}', {'a': 2, 'b': 3}, '6'),
             ('{{ a * a }}', {'a': 2}, '4'),
+
+            ('{{ 1.5 * 3.9 }}', {}, '5.85'),
+            ('{{ a * 3.9 }}', {'a': 1.5}, '5.85'),
+            ('{{ 1.5 * b }}', {'b': 3.9}, '5.85'),
+            ('{{ a * b }}', {'a': 1.5, 'b': 3.9}, '5.85'),
+            ('{{ a * a }}', {'a': 1.5}, '2.25'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -162,6 +195,12 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 6 / b }}', {'b': 3}, '2.0' if PY3 else '2'),
             ('{{ a / b }}', {'a': 6, 'b': 3}, '2.0' if PY3 else '2'),
             ('{{ a / a }}', {'a': 6}, '1.0' if PY3 else '1'),
+
+            ('{{ 3.5 / 1.4 }}', {}, '2.5'),
+            ('{{ a / 1.4 }}', {'a': 3.5}, '2.5'),
+            ('{{ 3.5 / b }}', {'b': 1.4}, '2.5'),
+            ('{{ a / b }}', {'a': 3.5, 'b': 1.4}, '2.5'),
+            ('{{ a / a }}', {'a': 3.5}, '1.0'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -176,6 +215,12 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 6 % b }}', {'b': 4}, '2'),
             ('{{ a % b }}', {'a': 6, 'b': 4}, '2'),
             ('{{ a % a }}', {'a': 6}, '0'),
+
+            ('{{ 2.0 % 1.2 }}', {}, '0.8'),
+            ('{{ a % 1.2 }}', {'a': 2.0}, '0.8'),
+            ('{{ 2.0 % b }}', {'b': 1.2}, '0.8'),
+            ('{{ a % b }}', {'a': 2.0, 'b': 1.2}, '0.8'),
+            ('{{ a % a }}', {'a': 2.0}, '0.0'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
