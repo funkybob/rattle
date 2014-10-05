@@ -3,9 +3,9 @@ import rply
 
 lg = rply.LexerGenerator()
 
-lg.add('NUMBER', '\d+')
+lg.add('NUMBER', '\d+(\.\d+|[eE]-?\d+)?')
 lg.add('STRING', "'.*?'|\".*?\"")
-lg.add('NAME', '\w+')
+lg.add('NAME', '[a-zA-Z_][a-zA-Z0-9_]*')
 lg.add('LSQB', '\[')
 lg.add('RSQB', '\]')
 lg.add('LPAREN', '\(')
@@ -101,7 +101,12 @@ def expr_STRING(p):
 
 @pg.production('expr : NUMBER')
 def expr_NUMBER(p):
-    return ast.Num(n=int(p[0].getstr()))
+    number = p[0].getstr()
+    if '.' in number or 'e' in number or 'E' in number:
+        cast = float
+    else:
+        cast = int
+    return ast.Num(n=cast(number))
 
 
 @pg.production('expr : expr DOT NAME')
