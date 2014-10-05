@@ -1,8 +1,8 @@
-
 import ast
 
 from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
 from .parser import pg, lg
+
 
 class TemplateSyntaxError(Exception):
     pass
@@ -97,4 +97,3 @@ class Template(object):
             'compiled_tags': self.compiled_tags,
             'filters': self.filter_functions,
         }))
-
