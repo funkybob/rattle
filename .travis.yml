@@ -1,0 +1,14 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "pypy"
+  - "pypy3"
+
+install:
+  - pip install -e .
+
+script:
+  - python -m unittest discover -v
