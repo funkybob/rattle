@@ -28,6 +28,7 @@ pg = rply.ParserGenerator(
         ('right', ['ASSIGN']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
+        ('left', ['LSQB', 'RSQB']),
         ('left', ['DOT']),
         ('left', ['LPAREN', 'RPAREN']),
     ],
@@ -120,6 +121,7 @@ _operator_mapping = {
     'DIV': ast.Div,
     'MOD': ast.Mod,
 }
+
 
 @pg.production('expr : expr PLUS expr')
 @pg.production('expr : expr MINUS expr')

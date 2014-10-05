@@ -48,7 +48,10 @@ class Template(object):
             code = ast.Call(
                 func=ast.Subscript(
                     value=ast.Name(id='compiled_tags', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Num(n=len(self.compiled_tags)-1), ctx=ast.Load()),
+                    slice=ast.Index(
+                        value=ast.Num(n=len(self.compiled_tags)-1),
+                        ctx=ast.Load()
+                    ),
                     ctx=ast.Load(),
                 ),
                 args=args,

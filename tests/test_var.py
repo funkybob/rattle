@@ -137,10 +137,13 @@ class OperatorsTest(TemplateTestCase):
             ('{{ 1 + (2 * 3) }}', {}, '7'),
             ('{{ (1 + 2) * 3 }}', {}, '9'),
             ('{{ a(b + 3, 4) }}', {'a': lambda x, y: x * y, 'b': 2}, '20'),
-            # TODO
-            # ('{{ a[1] + a[1] * a[2] }}', {'a': [2, 3, 4]}, '14'),
-            # ('{{ a[0].x + a[1].x * a[2].x }}', {'a': [Mock(x=2), Mock(x=3), Mock(x=4)]}, '14'),
-            # ('{{ (a[0].x + a[1].x) * a[2].x }}', {'a': [Mock(x=2), Mock(x=3), Mock(x=4)]}, '20'),
+            ('{{ a[0] + a[1] * a[2] }}', {'a': [2, 3, 4]}, '14'),
+            ('{{ a[0].x + a[1].x * b.y[0] }}',
+             {'a': [Mock(x=2), Mock(x=3)], 'b': Mock(y=[4])},
+             '14'),
+            ('{{ (a[0].x + a[1].x) * b.y[0] }}',
+             {'a': [Mock(x=2), Mock(x=3)], 'b': Mock(y=[4])},
+             '20'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
