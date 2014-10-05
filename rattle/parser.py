@@ -39,7 +39,7 @@ pg = rply.ParserGenerator(
 arg     :   expr
 
 arg_list    :   arg
-            |   arg COMMA arg_list
+            |   arg_list COMMA arg
 
 expr    :   NAME
         |   NUMBER
@@ -61,7 +61,7 @@ expr    :   NAME
 kwarg   :   NAME ASSIGN expr
 
 kwarg_list  :   kwarg
-            |   kwarg COMMA kwarg_list
+            |   kwarg_list COMMA kwarg
 '''
 
 lg.ignore(r"\s+")
@@ -77,10 +77,10 @@ def arg_list_arg(p):
     return p
 
 
-@pg.production('arg_list : arg COMMA arg_list')
+@pg.production('arg_list : arg_list COMMA arg')
 def arg_list_prepend(p):
-    arg, _, arg_list = p
-    arg_list.insert(0, arg)
+    arg_list, _, arg = p
+    arg_list.append(arg)
     return arg_list
 
 
@@ -181,10 +181,10 @@ def kwarg_list_kwarg(p):
     return p
 
 
-@pg.production('kwarg_list : kwarg COMMA kwarg_list')
+@pg.production('kwarg_list : kwarg_list COMMA kwarg')
 def kwarg_list_prepend(p):
-    kwarg, _, kwarg_list = p
-    kwarg_list.insert(0, kwarg)
+    kwarg_list, _, kwarg = p
+    kwarg_list.append(kwarg)
     return kwarg_list
 
 
