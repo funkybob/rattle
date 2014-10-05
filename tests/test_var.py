@@ -1,4 +1,4 @@
-
+import sys
 import unittest
 
 from rattle import Template
@@ -6,20 +6,38 @@ from rattle import Template
 from .utils import Mock
 
 
-class LiteralSyntaxTest(unittest.TestCase):
+PY3 = sys.version_info[0] == 3
+
+
+class TemplateTestCase(unittest.TestCase):
+
+    def assertRendered(self, actual, expected, template):
+        try:
+            self.assertEqual(actual, expected)
+        except Exception as e:
+            standardMsg = e.message
+            if isinstance(template, Template):
+                source = template.source
+            else:
+                source = template
+            msg = 'Failed rendering template %s:\n%s' % (source, standardMsg)
+            self.fail(self._formatMessage(msg, standardMsg))
+
+
+class LiteralSyntaxTest(TemplateTestCase):
 
     def test_renderStringLiteral(self):
         tmpl = Template("{{ 'hello' }}")
         output = tmpl.render()
-        self.assertEqual(output, 'hello')
+        self.assertRendered(output, 'hello', tmpl)
 
     def test_renderNumLiteral(self):
         tmpl = Template('{{ 23 }}')
         output = tmpl.render()
-        self.assertEqual(output, '23')
+        self.assertRendered(output, '23', tmpl)
 
 
-class VariableSyntaxTest(unittest.TestCase):
+class VariableSyntaxTest(TemplateTestCase):
 
     # A list of (template, context, output)
     TESTS = (
@@ -36,10 +54,10 @@ class VariableSyntaxTest(unittest.TestCase):
         for src, context, expect in self.TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
 
-class OperatorsTest(unittest.TestCase):
+class OperatorsTest(TemplateTestCase):
 
     def test_add(self):
         # A list of (template, context, output)
@@ -53,7 +71,7 @@ class OperatorsTest(unittest.TestCase):
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
     def test_sub(self):
         # A list of (template, context, output)
@@ -67,7 +85,7 @@ class OperatorsTest(unittest.TestCase):
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
     def test_mult(self):
         # A list of (template, context, output)
@@ -81,21 +99,21 @@ class OperatorsTest(unittest.TestCase):
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
     def test_div(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 6 / 3 }}', {}, '2.0'),
-            ('{{ a / 3 }}', {'a': 6}, '2.0'),
-            ('{{ 6 / b }}', {'b': 3}, '2.0'),
-            ('{{ a / b }}', {'a': 6, 'b': 3}, '2.0'),
-            ('{{ a / a }}', {'a': 6}, '1.0'),
+            ('{{ 6 / 3 }}', {}, '2.0' if PY3 else '2'),
+            ('{{ a / 3 }}', {'a': 6}, '2.0' if PY3 else '2'),
+            ('{{ 6 / b }}', {'b': 3}, '2.0' if PY3 else '2'),
+            ('{{ a / b }}', {'a': 6, 'b': 3}, '2.0' if PY3 else '2'),
+            ('{{ a / a }}', {'a': 6}, '1.0' if PY3 else '1'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
     def test_mod(self):
         # A list of (template, context, output)
@@ -109,7 +127,7 @@ class OperatorsTest(unittest.TestCase):
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
 
     def test_mixed(self):
         # A list of (template, context, output)
@@ -127,4 +145,4 @@ class OperatorsTest(unittest.TestCase):
         for src, context, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render(context)
-            self.assertEqual(output, expect, 'Tried rendering template %s' % src)
+            self.assertRendered(output, expect, src)
