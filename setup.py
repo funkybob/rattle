@@ -3,13 +3,14 @@ from setuptools import setup, find_packages
 
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    with open(os.path.join(os.path.dirname(__file__), fname)) as fin
+        return fin.read()
 
 
 setup(
     name='rattle',
     version='0.0.0',
-    author='funkybob',
+    author='Curtis Maloney',
     description='Python templating tool',
     license='MIT',
     url='https://github.com/funkybob/rattle',
