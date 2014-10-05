@@ -1,4 +1,3 @@
-
 import re
 
 TOKEN_TEXT = 0
@@ -12,8 +11,10 @@ TOKEN_MAPPING = {
     TOKEN_COMMENT: u'Comment',
 }
 
+
 class Token(object):
     __slots__ = ('mode', 'content', 'line', 'col',)
+
     def __init__(self, mode, content, line=None, col=None):
         self.mode = mode
         self.content = content
@@ -29,8 +30,11 @@ class Token(object):
         node.col_offset = self.col
         return node
 
-tag_re = re.compile(r'{%\s*(?P<tag>.+?)\s*%}|{{\s*(?P<var>.+?)\s*}}|{#\s*(?P<comment>.+?)\s*#}')
-                
+tag_re = re.compile(r'{%\s*(?P<tag>.+?)\s*%}|'
+                    r'{{\s*(?P<var>.+?)\s*}}|'
+                    r'{#\s*(?P<comment>.+?)\s*#}')
+
+
 def tokenise(template):
     '''A generator which yields Token instances'''
     # XXX Add line number tracking
@@ -53,4 +57,3 @@ def tokenise(template):
         upto = end
     if upto < len(template):
         yield Token(TOKEN_TEXT, template[upto:], line=lineno, col=start)
-
