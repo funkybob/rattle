@@ -3,19 +3,24 @@ rattle
 
 Python templating tool.
 
-Plan
-----
+Overview
+--------
 
-The plan is "simple".  Utilise the source tokeniser I wrote for
-django-contemplation, then use the ``tokenize`` and ``ast`` modules to convert
-templates into "native" code.
+With all the complains of Django's Template Language being "slow", whilst most
+people never use half of its built in features that prevent it being faster,
+and after playing with AST for a bit, I decided to try to build a mostly
+Django compatible template library, that compiled its tags with AST.
 
-Each Token will be built into native code using AST and ast.compile.
+Syntax
+------
 
-Argument expressions will use the tokenizer to provide rapid, reliable parsing.
+    {{ var }}
+    {{ var|filter }}
+    {{ var|filter:arg }}
+    {{ var|filter(args, kwargs=val) }}
 
-Tags will mostly use the same basic format:
+    {# comment #}
 
-    {% tagname [args]* [kwargs]* as ? %}
-
-so the engine can parse it itself.
+    {% block %}
+    {% block args kwargs=val %}
+    {% block .... as target %}

@@ -1,8 +1,8 @@
-
 import ast
 
 from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
 from .parser import pg, lg
+
 
 class TemplateSyntaxError(Exception):
     pass
@@ -48,7 +48,10 @@ class Template(object):
             code = ast.Call(
                 func=ast.Subscript(
                     value=ast.Name(id='compiled_tags', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Num(n=len(self.compiled_tags)-1), ctx=ast.Load()),
+                    slice=ast.Index(
+                        value=ast.Num(n=len(self.compiled_tags)-1),
+                        ctx=ast.Load()
+                    ),
                     ctx=ast.Load(),
                 ),
                 args=args,
@@ -97,4 +100,3 @@ class Template(object):
             'compiled_tags': self.compiled_tags,
             'filters': self.filter_functions,
         }))
-
