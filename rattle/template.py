@@ -7,6 +7,26 @@ from .parser import pg, lg
 class TemplateSyntaxError(Exception):
     pass
 
+class SafeData(str):
+    '''A wrapper for str to indicate it doesn't need escaping.'''
+    pass
+
+def escape(text):
+    """
+    Returns the given text with ampersands, quotes and angle brackets encoded for use in HTML.
+    """
+    if isinstance(text, SafeData):
+        return text
+    if not isinstance(text, str):
+        text = str(text)
+    return SafeData(
+        text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+    )
+
+def auto_escape(s):
+    if isinstance(s, SafeData):
+        return s
+    return escape(s)
 
 class Template(object):
     def __init__(self, source):
@@ -31,6 +51,11 @@ class Template(object):
         elif token.mode == TOKEN_VAR:
             # parse
             code = self.parser.parse(self.lexer.lex(token.content))
+            code = ast.Call(
+                func=ast.Name(id='auto_escape', ctx=ast.Load()),
+                args=[code],
+                keywords=[],
+            )
         elif token.mode == TOKEN_BLOCK:
             # Parse args/kwargs
             parsed = self.token_parser.parse(self.lexer.lex(token.content))
@@ -99,4 +124,5 @@ class Template(object):
             'context': context,
             'compiled_tags': self.compiled_tags,
             'filters': self.filter_functions,
+            'auto_escape': auto_escape,
         }))
