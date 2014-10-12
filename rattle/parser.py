@@ -5,22 +5,22 @@ import rply
 
 lg = rply.LexerGenerator()
 
-lg.add('NUMBER', '\d+(\.\d+|[eE]-?\d+)?')
-lg.add('STRING', "'.*?'|\".*?\"")
-lg.add('NAME', '[a-zA-Z_][a-zA-Z0-9_]*')
-lg.add('LSQB', '\[')
-lg.add('RSQB', '\]')
-lg.add('LPAREN', '\(')
-lg.add('RPAREN', '\)')
-lg.add('ASSIGN', '=')
-lg.add('COMMA', ',')
-lg.add('DOT', '\.')
+lg.add('NUMBER', r'\d+(\.\d+|[eE]-?\d+)?')
+lg.add('STRING', r"'.*?'|\".*?\"")
+lg.add('NAME', r'[a-zA-Z_][a-zA-Z0-9_]*')
+lg.add('LSQB', r'\[')
+lg.add('RSQB', r'\]')
+lg.add('LPAREN', r'\(')
+lg.add('RPAREN', r'\)')
+lg.add('ASSIGN', r'=')
+lg.add('COMMA', r',')
+lg.add('DOT', r'\.')
 
-lg.add('PLUS', '\+')
-lg.add('MINUS', '-')
-lg.add('MUL', '\*')
-lg.add('DIV', '/')
-lg.add('MOD', '%')
+lg.add('PLUS', r'\+')
+lg.add('MINUS', r'-')
+lg.add('MUL', r'\*')
+lg.add('DIV', r'/')
+lg.add('MOD', r'%')
 
 
 pg = rply.ParserGenerator(
