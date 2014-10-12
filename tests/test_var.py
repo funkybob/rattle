@@ -124,6 +124,25 @@ class VariableSyntaxTest(TemplateTestCase):
             output = tmpl.render(context)
             self.assertRendered(output, expect, src)
 
+    def test_filter(self):
+
+        def hello_filter(arg1):
+            return 'Hello %s!' % arg1
+
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ "world"|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello world!'),
+            ('{{ "world"|hello_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Hello world!!'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
 
 class OperatorsTest(TemplateTestCase):
 

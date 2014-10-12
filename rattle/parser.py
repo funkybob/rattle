@@ -1,21 +1,27 @@
 import ast
-import tokenize
 
 import rply
 
 lg = rply.LexerGenerator()
 
+# Literals
 lg.add('NUMBER', r'\d+(\.\d+|[eE]-?\d+)?')
 lg.add('STRING', r"'.*?'|\".*?\"")
 lg.add('NAME', r'[a-zA-Z_][a-zA-Z0-9_]*')
+
+# Parenthesis
 lg.add('LSQB', r'\[')
 lg.add('RSQB', r'\]')
 lg.add('LPAREN', r'\(')
 lg.add('RPAREN', r'\)')
-lg.add('ASSIGN', r'=')
+
+# Connectors
 lg.add('COMMA', r',')
 lg.add('DOT', r'\.')
+lg.add('PIPE', r'\|')
 
+# Operators
+lg.add('ASSIGN', r'=')
 lg.add('PLUS', r'\+')
 lg.add('MINUS', r'-')
 lg.add('MUL', r'\*')
@@ -33,6 +39,7 @@ pg = rply.ParserGenerator(
         ('left', ['LSQB', 'RSQB']),
         ('left', ['DOT']),
         ('left', ['LPAREN', 'RPAREN']),
+        ('left', ['PIPE']),
     ],
 )
 
@@ -53,6 +60,7 @@ expr    :   NAME
         |   expr MUL expr
         |   expr DIV expr
         |   expr MOD expr
+        |   expr PIPE expr
         |   LPAREN expr RPAREN
         |   expr LSQB expr RSQB
         |   expr LPAREN RPAREN
@@ -139,6 +147,12 @@ def expr_binop(p):
     lterm, op, rterm = p
     operator = _operator_mapping[op.gettokentype()]
     return ast.BinOp(left=lterm, op=operator(), right=rterm)
+
+
+@pg.production('expr : expr PIPE expr')
+def expr_filter_call(p):
+    lterm, _, rterm = p
+    return _build_call(rterm, [lterm])
 
 
 @pg.production('expr : LPAREN expr RPAREN')
