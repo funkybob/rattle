@@ -7,6 +7,12 @@ python:
   - "pypy"
   - "pypy3"
 
+matrix:
+  allow_failures:
+    - python: "pypy"
+
+  fast_finish: true
+
 install:
   - pip install -e .
 
