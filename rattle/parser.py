@@ -80,7 +80,7 @@ def arg_list_arg(p):
 
 
 @pg.production('arg_list : arg_list COMMA arg')
-def arg_list_prepend(p):
+def arg_list_append(p):
     arg_list, _, arg = p
     arg_list.append(arg)
     return arg_list
@@ -189,7 +189,7 @@ def kwarg_list_kwarg(p):
 
 
 @pg.production('kwarg_list : kwarg_list COMMA kwarg')
-def kwarg_list_prepend(p):
+def kwarg_list_append(p):
     kwarg_list, _, kwarg = p
     kwarg_list.append(kwarg)
     return kwarg_list
