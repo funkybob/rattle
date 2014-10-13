@@ -12,11 +12,13 @@ AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
 class TemplateSyntaxError(Exception):
     pass
 
+
 class SafeData(str):
     """
     A wrapper for str to indicate it doesn't need escaping.
     """
     pass
+
 
 def escape(text):
     """
@@ -32,10 +34,28 @@ def escape(text):
             .replace('"', '&quot;').replace("'", '&#39;')
     )
 
+
 def auto_escape(s):
     if isinstance(s, SafeData):
         return s
     return escape(s)
+
+
+class Library(object):
+
+    def __init__(self):
+        self.filters = {}
+        self.tags = {}
+
+    def register_filter(self, func):
+        self.filters[func.__name__] = func
+
+    def register_tag(self, func):
+        self.tags[func.__name__] = func
+
+
+library = Library()
+
 
 class Template(object):
     def __init__(self, source):
@@ -43,7 +63,6 @@ class Template(object):
 
         # A list of compiled tags
         self.compiled_tags = []
-        self.filter_functions = {}
 
         self.lexer = lg.build()
         self.parser = pg.build()
@@ -137,6 +156,6 @@ class Template(object):
         return u''.join(eval(self.func, {}, {
             'context': context,
             'compiled_tags': self.compiled_tags,
-            'filters': self.filter_functions,
+            'filters': library.filters,
             'auto_escape': auto_escape,
         }))

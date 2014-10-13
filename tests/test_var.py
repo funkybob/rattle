@@ -1,7 +1,7 @@
 import sys
 import unittest
 
-from rattle import Template
+from rattle import library, Template
 
 from .utils import Mock
 
@@ -126,17 +126,29 @@ class VariableSyntaxTest(TemplateTestCase):
 
     def test_filter(self):
 
+        def bye_filter(arg1):
+            return 'Bye %s!' % arg1
+
         def hello_filter(arg1):
             return 'Hello %s!' % arg1
+
+        library.register_filter(bye_filter)
+        library.register_filter(hello_filter)
 
         # A list of (template, context, output)
         TESTS = (
             ('{{ "world"|hello_filter }}',
              {'hello_filter': hello_filter},
              'Hello world!'),
-            ('{{ "world"|hello_filter|hello_filter }}',
+            ('{{ "world"|hello_filter|bye_filter }}',
              {'hello_filter': hello_filter},
-             'Hello Hello world!!'),
+             'Bye Hello world!!'),
+            ('{{ "world"|bye_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Bye world!!'),
+            ('{{ 42|bye_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Bye 42!!'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
