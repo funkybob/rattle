@@ -37,9 +37,9 @@ pg = rply.ParserGenerator(
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
         ('left', ['LSQB', 'RSQB']),
+        ('left', ['PIPE']),
         ('left', ['DOT']),
         ('left', ['LPAREN', 'RPAREN']),
-        ('left', ['PIPE']),
     ],
 )
 
@@ -100,13 +100,13 @@ def arg_list_append(p):
 
 @pg.production('lookup_name : NAME')
 def lookup_name_NAME(p):
-    return ast.List(elts=[ast.Str(s=p[0].getstr())], ctx=ast.Load())
+    return [ast.Str(s=p[0].getstr())]
 
 
 @pg.production('lookup_name : lookup_name DOT NAME')
 def lookup_name_append(p):
     lookup_name, _, name = p
-    lookup_name.append(name)
+    lookup_name.append(ast.Str(s=name.getstr()))
     return lookup_name
 
 
@@ -228,7 +228,7 @@ def _get_lookup_name(names):
                 generators=[
                     ast.comprehension(
                         target=ast.Name(id='x', ctx=ast.Store()),
-                        iter=names,
+                        iter=ast.List(elts=names, ctx=ast.Load()),
                         ifs=[]
                     )
                 ]

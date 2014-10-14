@@ -124,7 +124,37 @@ class VariableSyntaxTest(TemplateTestCase):
             output = tmpl.render(context)
             self.assertRendered(output, expect, src)
 
-    def test_filter(self):
+
+class FilterLookupTest(TemplateTestCase):
+
+    def set_up(self):
+        library.__init__()
+
+    def test_single_filter(self):
+
+        def hello_filter(arg1):
+            return 'Hello %s!' % arg1
+
+        library.register_filter(hello_filter)
+
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello 42!'),
+            ('{{ 13.37|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello 13.37!'),
+            ('{{ "world"|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello world!'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_multiple_filters(self):
 
         def bye_filter(arg1):
             return 'Bye %s!' % arg1
@@ -137,18 +167,33 @@ class VariableSyntaxTest(TemplateTestCase):
 
         # A list of (template, context, output)
         TESTS = (
-            ('{{ "world"|hello_filter }}',
+            ('{{ 42|bye_filter|hello_filter }}',
              {'hello_filter': hello_filter},
-             'Hello world!'),
+             'Hello Bye 42!!'),
+            ('{{ 13.37|bye_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Bye 13.37!!'),
             ('{{ "world"|hello_filter|bye_filter }}',
              {'hello_filter': hello_filter},
              'Bye Hello world!!'),
             ('{{ "world"|bye_filter|hello_filter }}',
              {'hello_filter': hello_filter},
              'Hello Bye world!!'),
-            ('{{ 42|bye_filter|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello Bye 42!!'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_single_filter_full_name(self):
+
+        import tests.filters
+
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|quote }}', {}, '&quot;42&quot;'),
+            ('{{ 13.37|quote }}', {}, '&quot;13.37&quot;'),
+            ('{{ "world"|quote }}', {}, '&quot;world&quot;'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
