@@ -46,7 +46,7 @@ expr    :   NAME
         |   expr LPAREN arg_list COMMA kwarg_list RPAREN
 
 filter  :   PIPE lookup_name
-        |   PIPE lookup_name COLON arg
+        |   PIPE lookup_name COLON NAME,NUMBER,STRING
         |   PIPE lookup_name LPAREN RPAREN
         |   PIPE lookup_name LPAREN arg_list RPAREN
         |   PIPE lookup_name LPAREN kwarg_list RPAREN
@@ -184,7 +184,9 @@ def expr_full_call(p):
     return build_call(func, args, kwargs)
 
 
-@pg.production('filter : PIPE lookup_name COLON arg')
+@pg.production('filter : PIPE lookup_name COLON NAME')
+@pg.production('filter : PIPE lookup_name COLON NUMBER')
+@pg.production('filter : PIPE lookup_name COLON STRING')
 def filter_colon_arg(p):
     _, filt, _, arg = p
     filter_name = get_lookup_name(filt)
