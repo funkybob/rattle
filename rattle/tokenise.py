@@ -41,8 +41,6 @@ def tokenise(template):
     """
     A generator which yields Token instances
     """
-    # XXX Add line number tracking
-    # XXX Add line, col tracking to tokens
     upto = 0
     lineno = 0
     start = 0
