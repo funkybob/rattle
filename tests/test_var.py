@@ -1,12 +1,20 @@
 import sys
 import unittest
 
-from rattle import Template
+from rattle import library, Template
 
+import tests.filters  # necessary to register test filters
 from .utils import Mock
 
 
 PY3 = sys.version_info[0] == 3
+
+
+def bye_filter(arg1):
+    return 'Bye %s!' % arg1
+
+def hello_filter(arg1):
+    return 'Hello %s!' % arg1
 
 
 class TemplateTestCase(unittest.TestCase):
@@ -28,6 +36,11 @@ class TemplateTestCase(unittest.TestCase):
 
 
 class LiteralSyntaxTest(TemplateTestCase):
+
+    def test_render_plain_text(self):
+        tmpl = Template("Hello {{ 'world' }}!")
+        output = tmpl.render()
+        self.assertRendered(output, 'Hello world!', tmpl)
 
     def test_renderStringLiteral(self):
         tmpl = Template("{{ 'hello' }}")
@@ -124,19 +137,122 @@ class VariableSyntaxTest(TemplateTestCase):
             output = tmpl.render(context)
             self.assertRendered(output, expect, src)
 
-    def test_filter(self):
 
-        def hello_filter(arg1):
-            return 'Hello %s!' % arg1
+class FilterLookupTest(TemplateTestCase):
 
+    def setUp(self):
+        library.register_filter(bye_filter)
+        library.register_filter(hello_filter)
+
+    def tearDown(self):
+        library.unregister_filter('tests.test_var.bye_filter')
+        library.unregister_filter('tests.test_var.hello_filter')
+
+    def test_single_filter(self):
         # A list of (template, context, output)
         TESTS = (
+            ('{{ 42|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello 42!'),
+            ('{{ 13.37|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello 13.37!'),
             ('{{ "world"|hello_filter }}',
              {'hello_filter': hello_filter},
              'Hello world!'),
-            ('{{ "world"|hello_filter|hello_filter }}',
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_multiple_filters(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|bye_filter|hello_filter }}',
              {'hello_filter': hello_filter},
-             'Hello Hello world!!'),
+             'Hello Bye 42!!'),
+            ('{{ 13.37|bye_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Bye 13.37!!'),
+            ('{{ "world"|hello_filter|bye_filter }}',
+             {'hello_filter': hello_filter},
+             'Bye Hello world!!'),
+            ('{{ "world"|bye_filter|hello_filter }}',
+             {'hello_filter': hello_filter},
+             'Hello Bye world!!'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_single_filter_short_name(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|quote }}', {}, '&quot;42&quot;'),
+            ('{{ 13.37|quote }}', {}, '&quot;13.37&quot;'),
+            ('{{ "world"|quote }}', {}, '&quot;world&quot;'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_single_filter_full_name(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|tests.filters.quote }}', {}, '&quot;42&quot;'),
+            ('{{ 13.37|tests.filters.quote }}', {}, '&quot;13.37&quot;'),
+            ('{{ "world"|tests.filters.quote }}', {}, '&quot;world&quot;'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_multiple_filter_short_name(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|quote|squote }}', {}, '&#39;&quot;42&quot;&#39;'),
+            ('{{ 13.37|quote|squote }}', {}, '&#39;&quot;13.37&quot;&#39;'),
+            ('{{ "world"|quote|squote }}', {}, '&#39;&quot;world&quot;&#39;'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_full_name_short_name(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|tests.filters.quote|squote }}',
+             {},
+             '&#39;&quot;42&quot;&#39;'),
+            ('{{ 13.37|tests.filters.quote|squote }}',
+             {},
+             '&#39;&quot;13.37&quot;&#39;'),
+            ('{{ "world"|tests.filters.quote|squote }}',
+             {},
+             '&#39;&quot;world&quot;&#39;'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_short_name_full_name(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 42|quote|tests.filters.squote }}',
+             {},
+             '&#39;&quot;42&quot;&#39;'),
+            ('{{ 13.37|quote|tests.filters.squote }}',
+             {},
+             '&#39;&quot;13.37&quot;&#39;'),
+            ('{{ "world"|quote|tests.filters.squote }}',
+             {},
+             '&#39;&quot;world&quot;&#39;'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)

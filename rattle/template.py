@@ -1,32 +1,97 @@
 import ast
+import os
 
-from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
+from .astpp import dump as ast_dump
 from .parser import pg, lg
+from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
+
+
+AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
 
 
 class TemplateSyntaxError(Exception):
     pass
 
+
 class SafeData(str):
-    '''A wrapper for str to indicate it doesn't need escaping.'''
+    """
+    A wrapper for str to indicate it doesn't need escaping.
+    """
     pass
+
 
 def escape(text):
     """
-    Returns the given text with ampersands, quotes and angle brackets encoded for use in HTML.
+    Returns the given text with ampersands, quotes and angle brackets encoded
+    for use in HTML.
     """
     if isinstance(text, SafeData):
         return text
     if not isinstance(text, str):
         text = str(text)
     return SafeData(
-        text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+        text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            .replace('"', '&quot;').replace("'", '&#39;')
     )
+
 
 def auto_escape(s):
     if isinstance(s, SafeData):
         return s
     return escape(s)
+
+
+class Library(object):
+
+    def __init__(self):
+        self._filters = {}
+        self._tags = {}
+        self._ambiguous_filters = set()
+        self._ambiguous_tags = set()
+
+    @property
+    def filters(self):
+        return self._filters
+
+    @property
+    def tags(self):
+        return self._tags
+
+    def register_filter(self, func):
+        name = func.__name__
+        full_name = '%s.%s' % (func.__module__, func.__name__)
+        if name not in self._filters:
+            if name not in self._ambiguous_filters:
+                self._filters[func.__name__] = func
+        elif full_name not in self._filters:
+            self._ambiguous_filters.add(name)
+            del self._filters[name]
+        self._filters[full_name] = func
+
+    def unregister_filter(self, full_name):
+        self._filters.pop(full_name, None)
+        _, _, short_name = full_name.rpartition('.')
+        self._filters.pop(short_name, None)
+
+    def register_tag(self, func):
+        name = func.__name__
+        full_name = '%s.%s' % (func.__module__, func.__name__)
+        if name not in self._tags:
+            if name not in self._ambiguous_tags:
+                self._tags[func.__name__] = func
+        elif full_name not in self._tags:
+            self._ambiguous_tags.add(name)
+            del self._tags[name]
+        self._tags[full_name] = func
+
+    def unregister_tag(self, full_name):
+        self._tags.pop(full_name, None)
+        _, _, short_name = full_name.rpartition('.')
+        self._tags.pop(short_name, None)
+
+
+library = Library()
+
 
 class Template(object):
     def __init__(self, source):
@@ -34,17 +99,20 @@ class Template(object):
 
         # A list of compiled tags
         self.compiled_tags = []
-        self.filter_functions = {}
 
         self.lexer = lg.build()
         self.parser = pg.build()
 
         code = self.parse()
         ast.fix_missing_locations(code)
+        if AST_DEBUG:
+            print(ast_dump(code))
         self.func = compile(code, filename="<template>", mode="eval")
 
     def _token_to_code(self, token):
-        '''Given a Token instance, convert it to AST'''
+        """
+        Given a Token instance, convert it to AST
+        """
         code = None
         if token.mode == TOKEN_TEXT:
             code = ast.Str(s=token.content)
@@ -90,8 +158,9 @@ class Template(object):
             return token._position(code)
 
     def parse(self):
-        '''Convert the parsed tokens into a list of expressions
-        Then join them'''
+        """
+        Convert the parsed tokens into a list of expressions then join them
+        """
         self.stream = tokenise(self.source)
         steps = []
         for token in self.stream:
@@ -123,6 +192,6 @@ class Template(object):
         return u''.join(eval(self.func, {}, {
             'context': context,
             'compiled_tags': self.compiled_tags,
-            'filters': self.filter_functions,
+            'filters': library.filters,
             'auto_escape': auto_escape,
         }))

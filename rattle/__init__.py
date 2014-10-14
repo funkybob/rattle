@@ -1,1 +1,1 @@
-from .template import Template
+from .template import library, Template
