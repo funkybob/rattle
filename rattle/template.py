@@ -98,6 +98,7 @@ library = Library()
 
 
 class Template(object):
+
     def __init__(self, source):
         self.source = source
 
@@ -112,6 +113,12 @@ class Template(object):
         if AST_DEBUG:
             print(ast_dump(code))
         self.func = compile(code, filename="<template>", mode="eval")
+
+        self.default_context = {
+            'True': True,
+            'False': False,
+            'None': None,
+        }
 
     def _token_to_code(self, token):
         """
@@ -193,8 +200,10 @@ class Template(object):
         )
 
     def render(self, context={}):
+        ctx = context.copy()
+        ctx.update(self.default_context)
         return u''.join(eval(self.func, {}, {
-            'context': context,
+            'context': ctx,
             'compiled_tags': self.compiled_tags,
             'filters': library.filters,
             'auto_escape': auto_escape,
