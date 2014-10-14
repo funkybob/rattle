@@ -4,6 +4,7 @@ import os
 from .astpp import dump as ast_dump
 from .parser import pg, lg
 from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
+from .utils.parser import build_call
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
@@ -130,10 +131,9 @@ class Template(object):
         elif token.mode == TOKEN_VAR:
             # parse
             code = self.parser.parse(self.lexer.lex(token.content))
-            code = ast.Call(
-                func=ast.Name(id='auto_escape', ctx=ast.Load()),
-                args=[code],
-                keywords=[],
+            code = build_call(
+                ast.Name(id='auto_escape', ctx=ast.Load()),
+                args=[code]
             )
         elif token.mode == TOKEN_BLOCK:
             # Parse args/kwargs
@@ -149,8 +149,8 @@ class Template(object):
             tag = self.tags[tag_name](self, *args, **kwargs)
             # place tag code in local "compiled_tags" storage
             self.compiled_tags.append(tag)
-            code = ast.Call(
-                func=ast.Subscript(
+            code = build_call(
+                ast.Subscript(
                     value=ast.Name(id='compiled_tags', ctx=ast.Load()),
                     slice=ast.Index(
                         value=ast.Num(n=len(self.compiled_tags)-1),
@@ -182,12 +182,11 @@ class Template(object):
         # result = [str(x) for x in steps]
         return ast.Expression(
             body=ast.ListComp(
-                elt=ast.Call(
-                    func=ast.Name(id='str', ctx=ast.Load()),
+                elt=build_call(
+                    ast.Name(id='str', ctx=ast.Load()),
                     args=[
                         ast.Name(id='x', ctx=ast.Load()),
                     ],
-                    keywords=[],
                 ),
                 generators=[
                     ast.comprehension(
