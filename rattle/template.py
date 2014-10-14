@@ -67,6 +67,8 @@ class Library(object):
             self._ambiguous_filters.add(name)
             del self._filters[name]
         self._filters[full_name] = func
+        # Allows user as decorator
+        return func
 
     def unregister_filter(self, full_name):
         self._filters.pop(full_name, None)
@@ -83,6 +85,8 @@ class Library(object):
             self._ambiguous_tags.add(name)
             del self._tags[name]
         self._tags[full_name] = func
+        # Allows user as decorator
+        return func
 
     def unregister_tag(self, full_name):
         self._tags.pop(full_name, None)
