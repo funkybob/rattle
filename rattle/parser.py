@@ -37,9 +37,9 @@ pg = rply.ParserGenerator(
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
         ('left', ['LSQB', 'RSQB']),
+        ('left', ['PIPE']),
         ('left', ['DOT']),
         ('left', ['LPAREN', 'RPAREN']),
-        ('left', ['PIPE']),
     ],
 )
 
@@ -50,23 +50,27 @@ arg     :   expr
 arg_list    :   arg
             |   arg_list COMMA arg
 
+lookup_name : NAME
+            | lookup_name DOT NAME
+
 expr    :   NAME
         |   NUMBER
         |   STRING
         |   expr DOT NAME
-        |   expr
         |   expr PLUS expr
         |   expr MINUS expr
         |   expr MUL expr
         |   expr DIV expr
         |   expr MOD expr
-        |   expr PIPE expr
+        |   expr filter
         |   LPAREN expr RPAREN
         |   expr LSQB expr RSQB
         |   expr LPAREN RPAREN
         |   expr LPAREN arg_list RPAREN
         |   expr LPAREN kwarg_list RPAREN
         |   expr LPAREN arg_list COMMA kwarg_list RPAREN
+
+filter  :   PIPE lookup_name
 
 kwarg   :   NAME ASSIGN expr
 
@@ -94,6 +98,18 @@ def arg_list_append(p):
     return arg_list
 
 
+@pg.production('lookup_name : NAME')
+def lookup_name_NAME(p):
+    return [ast.Str(s=p[0].getstr())]
+
+
+@pg.production('lookup_name : lookup_name DOT NAME')
+def lookup_name_append(p):
+    lookup_name, _, name = p
+    lookup_name.append(ast.Str(s=name.getstr()))
+    return lookup_name
+
+
 @pg.production('expr : NAME')
 def expr_NAME(p):
     """
@@ -119,6 +135,12 @@ def expr_NUMBER(p):
     else:
         cast = int
     return ast.Num(n=cast(number))
+
+
+@pg.production('expr : expr filter')
+def expr_filter(p):
+    arg, filter = p
+    return _build_call(filter, [arg])
 
 
 @pg.production('expr : expr DOT NAME')
@@ -149,12 +171,6 @@ def expr_binop(p):
     lterm, op, rterm = p
     operator = _operator_mapping[op.gettokentype()]
     return ast.BinOp(left=lterm, op=operator(), right=rterm)
-
-
-@pg.production('expr : expr PIPE expr')
-def expr_filter_call(p):
-    lterm, _, rterm = p
-    return _build_call(rterm, [lterm])
 
 
 @pg.production('expr : LPAREN expr RPAREN')
@@ -192,6 +208,46 @@ def expr_args_call(p):
     func, _, args, _ = p
     return _build_call(func, args)
 
+
+def _get_lookup_name(names):
+    return ast.Call(
+        func=ast.Attribute(
+            value=ast.Str(s='.'),
+            attr='join',
+            ctx=ast.Load()
+        ),
+        args=[
+            ast.GeneratorExp(
+                elt=ast.Call(
+                    func=ast.Name(id='str', ctx=ast.Load()),
+                    args=[
+                        ast.Name(id='x', ctx=ast.Load())
+                    ],
+                    keywords=[]
+                ),
+                generators=[
+                    ast.comprehension(
+                        target=ast.Name(id='x', ctx=ast.Store()),
+                        iter=ast.List(elts=names, ctx=ast.Load()),
+                        ifs=[]
+                    )
+                ]
+            )
+        ],
+        keywords=[]
+    )
+
+
+@pg.production('filter : PIPE lookup_name')
+def filter_pipe_lookup_name(p):
+    filter_name = _get_lookup_name(p[1])
+
+    filter_func = ast.Subscript(
+        value=ast.Name(id='filters', ctx=ast.Load()),
+        slice=ast.Index(value=filter_name, ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+    return filter_func
 
 @pg.production('kwarg : NAME ASSIGN expr')
 def keyword(p):
