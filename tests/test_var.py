@@ -4,7 +4,7 @@ import unittest
 from rattle import library, Template
 
 import tests.filters  # necessary to register test filters
-from .utils import Mock
+from tests.utils import Mock
 
 
 PY3 = sys.version_info[0] == 3
