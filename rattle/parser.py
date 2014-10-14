@@ -4,7 +4,7 @@ import ast
 import rply
 
 from .lexer import lg
-from .utils.parser import build_call, get_lookup_name
+from .utils.parser import build_call, get_filter_func, get_lookup_name
 
 
 pg = rply.ParserGenerator(
@@ -58,6 +58,7 @@ kwarg_list  :   kwarg
 
 lookup_name : NAME
             | lookup_name DOT NAME
+
 """
 
 lg.ignore(r"\s+")
@@ -185,24 +186,14 @@ def expr_full_call(p):
 @pg.production('filter : PIPE lookup_name')
 def filter_pipe_lookup_name(p):
     filter_name = get_lookup_name(p[1])
-
-    filter_func = ast.Subscript(
-        value=ast.Name(id='filters', ctx=ast.Load()),
-        slice=ast.Index(value=filter_name, ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
+    filter_func = get_filter_func(filter_name)
     return filter_func, [], []
 
 
 @pg.production('filter : PIPE lookup_name LPAREN RPAREN')
 def filter_pipe_lookup_empty_call(p):
     filter_name = get_lookup_name(p[1])
-
-    filter_func = ast.Subscript(
-        value=ast.Name(id='filters', ctx=ast.Load()),
-        slice=ast.Index(value=filter_name, ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
+    filter_func = get_filter_func(filter_name)
     return filter_func, [], []
 
 
@@ -210,12 +201,7 @@ def filter_pipe_lookup_empty_call(p):
 def filter_pipe_lookup_args_call(p):
     _, filter, _, args, _ = p
     filter_name = get_lookup_name(filter)
-
-    filter_func = ast.Subscript(
-        value=ast.Name(id='filters', ctx=ast.Load()),
-        slice=ast.Index(value=filter_name, ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
+    filter_func = get_filter_func(filter_name)
     return filter_func, args, []
 
 
@@ -223,12 +209,7 @@ def filter_pipe_lookup_args_call(p):
 def filter_pipe_lookup_kwargs_call(p):
     _, filter, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)
-
-    filter_func = ast.Subscript(
-        value=ast.Name(id='filters', ctx=ast.Load()),
-        slice=ast.Index(value=filter_name, ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
+    filter_func = get_filter_func(filter_name)
     return filter_func, [], kwargs
 
 
@@ -236,12 +217,7 @@ def filter_pipe_lookup_kwargs_call(p):
 def filter_pipe_lookup_full_call(p):
     _, filter, _, args, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)
-
-    filter_func = ast.Subscript(
-        value=ast.Name(id='filters', ctx=ast.Load()),
-        slice=ast.Index(value=filter_name, ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
+    filter_func = get_filter_func(filter_name)
     return filter_func, args, kwargs
 
 
