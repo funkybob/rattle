@@ -163,6 +163,7 @@ class FilterLookupTest(TemplateTestCase):
              '&quot;1.0&quot;' if PY3 else '&quot;1&quot;'),
             # LSQB / RSQB
             ('{{ a[1]|join(",") }}', {'a': ['yes', 'no']}, 'n,o'),
+            ('{{ a|join:"," }}', {'a': ['1', '2', '3']}, '1,2,3'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)

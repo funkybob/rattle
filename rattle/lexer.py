@@ -18,6 +18,7 @@ lg.add('RPAREN', r'\)')
 lg.add('COMMA', r',')
 lg.add('DOT', r'\.')
 lg.add('PIPE', r'\|')
+lg.add('COLON', r':')
 
 # Operators
 lg.add('ASSIGN', r'=')
