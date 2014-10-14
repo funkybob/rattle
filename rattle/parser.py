@@ -70,6 +70,10 @@ expr    :   NAME
         |   expr LPAREN arg_list COMMA kwarg_list RPAREN
 
 filter  :   PIPE lookup_name
+        |   PIPE lookup_name LPAREN RPAREN
+        |   PIPE lookup_name LPAREN arg_list RPAREN
+        |   PIPE lookup_name LPAREN kwarg_list RPAREN
+        |   PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN
 
 kwarg   :   NAME ASSIGN expr
 
@@ -159,8 +163,8 @@ def expr_binop(p):
 
 @pg.production('expr : expr filter')
 def expr_filter(p):
-    arg, filter = p
-    return build_call(filter, [arg])
+    arg, (filter, args, kwargs) = p
+    return build_call(filter, [arg] + args, kwargs)
 
 
 @pg.production('expr : LPAREN expr RPAREN')
@@ -211,11 +215,62 @@ def filter_pipe_lookup_name(p):
         slice=ast.Index(value=filter_name, ctx=ast.Load()),
         ctx=ast.Load(),
     )
-    return filter_func
+    return filter_func, [], []
+
+
+@pg.production('filter : PIPE lookup_name LPAREN RPAREN')
+def filter_pipe_lookup_empty_call(p):
+    filter_name = get_lookup_name(p[1])
+
+    filter_func = ast.Subscript(
+        value=ast.Name(id='filters', ctx=ast.Load()),
+        slice=ast.Index(value=filter_name, ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+    return filter_func, [], []
+
+
+@pg.production('filter : PIPE lookup_name LPAREN arg_list RPAREN')
+def filter_pipe_lookup_args_call(p):
+    _, filter, _, args, _ = p
+    filter_name = get_lookup_name(filter)
+
+    filter_func = ast.Subscript(
+        value=ast.Name(id='filters', ctx=ast.Load()),
+        slice=ast.Index(value=filter_name, ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+    return filter_func, args, []
+
+
+@pg.production('filter : PIPE lookup_name LPAREN kwarg_list RPAREN')
+def filter_pipe_lookup_kwargs_call(p):
+    _, filter, _, kwargs, _ = p
+    filter_name = get_lookup_name(filter)
+
+    filter_func = ast.Subscript(
+        value=ast.Name(id='filters', ctx=ast.Load()),
+        slice=ast.Index(value=filter_name, ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+    return filter_func, [], kwargs
+
+
+@pg.production('filter : PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
+def filter_pipe_lookup_full_call(p):
+    _, filter, _, args, _, kwargs, _ = p
+    filter_name = get_lookup_name(filter)
+
+    filter_func = ast.Subscript(
+        value=ast.Name(id='filters', ctx=ast.Load()),
+        slice=ast.Index(value=filter_name, ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+    return filter_func, args, kwargs
 
 
 @pg.production('kwarg : NAME ASSIGN expr')
-def keyword(p):
+def kwarg_assignment(p):
     name, _, expr = p
     return ast.keyword(arg=name.getstr(), value=expr)
 
