@@ -43,7 +43,7 @@ pg = rply.ParserGenerator(
     ],
 )
 
-'''
+"""
 
 arg     :   expr
 
@@ -72,7 +72,7 @@ kwarg   :   NAME ASSIGN expr
 
 kwarg_list  :   kwarg
             |   kwarg_list COMMA kwarg
-'''
+"""
 
 lg.ignore(r"\s+")
 
@@ -96,7 +96,9 @@ def arg_list_append(p):
 
 @pg.production('expr : NAME')
 def expr_NAME(p):
-    '''Look up a NAME in Context'''
+    """
+    Look up a NAME in Context
+    """
     return ast.Subscript(
         value=ast.Name(id='context', ctx=ast.Load()),
         slice=ast.Index(value=ast.Str(s=p[0].getstr()), ctx=ast.Load()),
