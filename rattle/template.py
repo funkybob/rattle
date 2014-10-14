@@ -1,7 +1,12 @@
 import ast
+import os
 
-from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
+from .astpp import dump as ast_dump
 from .parser import pg, lg
+from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
+
+
+AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
 
 
 class TemplateSyntaxError(Exception):
@@ -41,6 +46,8 @@ class Template(object):
 
         code = self.parse()
         ast.fix_missing_locations(code)
+        if AST_DEBUG:
+            print(ast_dump(code))
         self.func = compile(code, filename="<template>", mode="eval")
 
     def _token_to_code(self, token):
