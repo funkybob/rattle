@@ -20,10 +20,18 @@ lg.add('DOT', r'\.')
 lg.add('PIPE', r'\|')
 lg.add('COLON', r':')
 
-# Operators
+# Binary Operators
 lg.add('ASSIGN', r'=')
 lg.add('PLUS', r'\+')
 lg.add('MINUS', r'-')
 lg.add('MUL', r'\*')
 lg.add('DIV', r'/')
 lg.add('MOD', r'%')
+
+# Comparators
+lg.add('EQUAL', r'==')
+lg.add('NEQUAL', r'!=')
+lg.add('LT', r'<')
+lg.add('LTE', r'<=')
+lg.add('GT', r'>')
+lg.add('GTE', r'>=')

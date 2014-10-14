@@ -446,7 +446,7 @@ class FilterLookupTest(TemplateTestCase):
             self.assertRendered(output, expect, src)
 
 
-class OperatorsTest(TemplateTestCase):
+class BinaryOperatorsTest(TemplateTestCase):
 
     def test_add(self):
         # A list of (template, context, output)
@@ -563,6 +563,42 @@ class OperatorsTest(TemplateTestCase):
             ('{{ (a[0].x + a[1].x) * b.y[0] }}',
              {'a': [Mock(x=2), Mock(x=3)], 'b': Mock(y=[4])},
              '20'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+
+class ComparatorsTest(TemplateTestCase):
+
+    def test_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1==1 }}', {}, 'True'),
+            ('{{ 1==2 }}', {}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_less(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1<1 }}', {}, 'False'),
+            ('{{ 1<2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_greater(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1>1 }}', {}, 'False'),
+            ('{{ 2>1 }}', {}, 'True'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)

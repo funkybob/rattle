@@ -13,6 +13,7 @@ pg = rply.ParserGenerator(
         ('left', ['COMMA']),
         ('right', ['ASSIGN']),
         ('left', ['PIPE']),
+        ('left', ['EQUAL', 'NEQUAL', 'LT', 'LTE', 'GT', 'GTE']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
         ('left', ['LSQB', 'RSQB']),
@@ -30,11 +31,20 @@ arg_list    :   arg
 
 expr    :   literal
         |   expr DOT NAME
+
         |   expr PLUS expr
         |   expr MINUS expr
         |   expr MUL expr
         |   expr DIV expr
         |   expr MOD expr
+
+        |   expr EQUAL expr
+        |   expr NEQUAL expr
+        |   expr LT expr
+        |   expr LTE expr
+        |   expr GT expr
+        |   expr GTE expr
+
         |   expr filter
         |   LPAREN expr RPAREN
         |   expr LSQB expr RSQB
@@ -105,7 +115,7 @@ def expr_DOT_NAME(p):
     )
 
 
-_operator_mapping = {
+_binop_mapping = {
     'PLUS': ast.Add,
     'MINUS': ast.Sub,
     'MUL': ast.Mult,
@@ -121,8 +131,30 @@ _operator_mapping = {
 @pg.production('expr : expr MOD expr')
 def expr_binop(p):
     lterm, op, rterm = p
-    operator = _operator_mapping[op.gettokentype()]
+    operator = _binop_mapping[op.gettokentype()]
     return ast.BinOp(left=lterm, op=operator(), right=rterm)
+
+
+_cmpop_mapping = {
+    'EQUAL': ast.Eq,
+    'NEQUAL': ast.NotEq,
+    'LT': ast.Lt,
+    'LTE': ast.LtE,
+    'GT': ast.Gt,
+    'GTE': ast.GtE,
+}
+
+
+@pg.production('expr : expr EQUAL expr')
+@pg.production('expr : expr NEQUAL expr')
+@pg.production('expr : expr LT expr')
+@pg.production('expr : expr LTE expr')
+@pg.production('expr : expr GT expr')
+@pg.production('expr : expr GTE expr')
+def expr_cmpop(p):
+    lterm, op, rterm = p
+    operator = _cmpop_mapping[op.gettokentype()]
+    return ast.Compare(left=lterm, ops=[operator()], comparators=[rterm])
 
 
 @pg.production('expr : expr filter')
