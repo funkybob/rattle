@@ -13,19 +13,23 @@ class TemplateSyntaxError(Exception):
     pass
 
 class SafeData(str):
-    '''A wrapper for str to indicate it doesn't need escaping.'''
+    """
+    A wrapper for str to indicate it doesn't need escaping.
+    """
     pass
 
 def escape(text):
     """
-    Returns the given text with ampersands, quotes and angle brackets encoded for use in HTML.
+    Returns the given text with ampersands, quotes and angle brackets encoded
+    for use in HTML.
     """
     if isinstance(text, SafeData):
         return text
     if not isinstance(text, str):
         text = str(text)
     return SafeData(
-        text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+        text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            .replace('"', '&quot;').replace("'", '&#39;')
     )
 
 def auto_escape(s):
@@ -51,7 +55,9 @@ class Template(object):
         self.func = compile(code, filename="<template>", mode="eval")
 
     def _token_to_code(self, token):
-        '''Given a Token instance, convert it to AST'''
+        """
+        Given a Token instance, convert it to AST
+        """
         code = None
         if token.mode == TOKEN_TEXT:
             code = ast.Str(s=token.content)
@@ -97,8 +103,9 @@ class Template(object):
             return token._position(code)
 
     def parse(self):
-        '''Convert the parsed tokens into a list of expressions
-        Then join them'''
+        """
+        Convert the parsed tokens into a list of expressions then join them
+        """
         self.stream = tokenise(self.source)
         steps = []
         for token in self.stream:

@@ -25,7 +25,9 @@ class Token(object):
         return u'{%s} %s' % (TOKEN_MAPPING[self.mode], self.content,)
 
     def _position(self, node):
-        '''Annotate an AST node with this token's row/col'''
+        """
+        Annotate an AST node with this token's row/col
+        """
         node.lineno = self.line
         node.col_offset = self.col
         return node
@@ -36,7 +38,9 @@ tag_re = re.compile(r'{%\s*(?P<tag>.+?)\s*%}|'
 
 
 def tokenise(template):
-    '''A generator which yields Token instances'''
+    """
+    A generator which yields Token instances
+    """
     # XXX Add line number tracking
     # XXX Add line, col tracking to tokens
     upto = 0
