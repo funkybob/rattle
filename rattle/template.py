@@ -100,8 +100,9 @@ library = Library()
 
 class Template(object):
 
-    def __init__(self, source):
+    def __init__(self, source, origin=None):
         self.source = source
+        self.origin = origin
 
         # A list of compiled tags
         self.compiled_tags = []
