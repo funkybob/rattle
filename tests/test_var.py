@@ -37,6 +37,11 @@ class TemplateTestCase(unittest.TestCase):
 
 class LiteralSyntaxTest(TemplateTestCase):
 
+    def test_render_plain_text(self):
+        tmpl = Template("Hello {{ 'world' }}!")
+        output = tmpl.render()
+        self.assertRendered(output, 'Hello world!', tmpl)
+
     def test_renderStringLiteral(self):
         tmpl = Template("{{ 'hello' }}")
         output = tmpl.render()
