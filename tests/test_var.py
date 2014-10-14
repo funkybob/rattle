@@ -149,6 +149,26 @@ class FilterLookupTest(TemplateTestCase):
         library.unregister_filter('tests.test_var.bye_filter')
         library.unregister_filter('tests.test_var.hello_filter')
 
+    def test_pipe_precendence(self):
+        # A list of (template, context, output)
+        TESTS = (
+            # ASSIGN
+            ('{{ "foo"|join(sep="::"|join(",")) }}', {}, 'f:,:o:,:o'),
+            # BinOp
+            ('{{ 21 + 21|quote }}', {}, '&quot;42&quot;'),
+            ('{{ 21 - 21|quote }}', {}, '&quot;0&quot;'),
+            ('{{ 21 * 21|quote }}', {}, '&quot;441&quot;'),
+            ('{{ 21 / 21|quote }}',
+             {},
+             '&quot;1.0&quot;' if PY3 else '&quot;1&quot;'),
+            # LSQB / RSQB
+            ('{{ a[1]|join(",") }}', {'a': ['yes', 'no']}, 'n,o'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
     def test_single_filter(self):
         # A list of (template, context, output)
         TESTS = (

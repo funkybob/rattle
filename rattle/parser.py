@@ -12,10 +12,10 @@ pg = rply.ParserGenerator(
     precedence=[
         ('left', ['COMMA']),
         ('right', ['ASSIGN']),
+        ('left', ['PIPE']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
         ('left', ['LSQB', 'RSQB']),
-        ('left', ['PIPE']),
         ('left', ['DOT']),
         ('left', ['LPAREN', 'RPAREN']),
     ],
