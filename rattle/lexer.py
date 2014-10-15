@@ -1,5 +1,11 @@
-
 import rply
+
+"""
+.. warning:
+
+    Watch the order in which the tokens are added to the lexer! In case of
+    ambiguity the *first matching* will win!
+"""
 
 lg = rply.LexerGenerator()
 
@@ -21,7 +27,7 @@ lg.add('PIPE', r'\|')
 lg.add('COLON', r':')
 
 # Binary Operators
-lg.add('ASSIGN', r'=')
+lg.add('ASSIGN', r'=(?!=)')  # neg. lookahead. Needed due to rply restriction
 lg.add('PLUS', r'\+')
 lg.add('MINUS', r'-')
 lg.add('MUL', r'\*')
@@ -31,7 +37,7 @@ lg.add('MOD', r'%')
 # Comparators
 lg.add('EQUAL', r'==')
 lg.add('NEQUAL', r'!=')
-lg.add('LT', r'<')
 lg.add('LTE', r'<=')
-lg.add('GT', r'>')
+lg.add('LT', r'<')
 lg.add('GTE', r'>=')
+lg.add('GT', r'>')

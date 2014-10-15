@@ -575,8 +575,33 @@ class ComparatorsTest(TemplateTestCase):
     def test_equal(self):
         # A list of (template, context, output)
         TESTS = (
+            ('{{ 1==0 }}', {}, 'False'),
             ('{{ 1==1 }}', {}, 'True'),
             ('{{ 1==2 }}', {}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_nequal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1!=0 }}', {}, 'True'),
+            ('{{ 1!=1 }}', {}, 'False'),
+            ('{{ 1!=2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_less_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1<=0 }}', {}, 'False'),
+            ('{{ 1<=1 }}', {}, 'True'),
+            ('{{ 1<=2 }}', {}, 'True'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -586,8 +611,21 @@ class ComparatorsTest(TemplateTestCase):
     def test_less(self):
         # A list of (template, context, output)
         TESTS = (
+            ('{{ 1<0 }}', {}, 'False'),
             ('{{ 1<1 }}', {}, 'False'),
             ('{{ 1<2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_greater_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0>=1 }}', {}, 'False'),
+            ('{{ 1>=1 }}', {}, 'True'),
+            ('{{ 2>=1 }}', {}, 'True'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)
@@ -597,6 +635,7 @@ class ComparatorsTest(TemplateTestCase):
     def test_greater(self):
         # A list of (template, context, output)
         TESTS = (
+            ('{{ 0>1 }}', {}, 'False'),
             ('{{ 1>1 }}', {}, 'False'),
             ('{{ 2>1 }}', {}, 'True'),
         )

@@ -147,10 +147,10 @@ _cmpop_mapping = {
 
 @pg.production('expr : expr EQUAL expr')
 @pg.production('expr : expr NEQUAL expr')
-@pg.production('expr : expr LT expr')
 @pg.production('expr : expr LTE expr')
-@pg.production('expr : expr GT expr')
+@pg.production('expr : expr LT expr')
 @pg.production('expr : expr GTE expr')
+@pg.production('expr : expr GT expr')
 def expr_cmpop(p):
     lterm, op, rterm = p
     operator = _cmpop_mapping[op.gettokentype()]
