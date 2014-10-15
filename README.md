@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/funkybob/rattle.svg?branch=master)](https://travis-ci.org/funkybob/rattle)
+
 rattle
 ======
 
