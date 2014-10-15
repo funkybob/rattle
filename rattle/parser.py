@@ -28,9 +28,7 @@ arg     :   expr
 arg_list    :   arg
             |   arg_list COMMA arg
 
-expr    :   NAME
-        |   NUMBER
-        |   STRING
+expr    :   literal
         |   expr DOT NAME
         |   expr PLUS expr
         |   expr MINUS expr
@@ -46,7 +44,7 @@ expr    :   NAME
         |   expr LPAREN arg_list COMMA kwarg_list RPAREN
 
 filter  :   PIPE lookup_name
-        |   PIPE lookup_name COLON NAME,NUMBER,STRING
+        |   PIPE lookup_name COLON literal
         |   PIPE lookup_name LPAREN RPAREN
         |   PIPE lookup_name LPAREN arg_list RPAREN
         |   PIPE lookup_name LPAREN kwarg_list RPAREN
@@ -57,8 +55,18 @@ kwarg   :   NAME ASSIGN expr
 kwarg_list  :   kwarg
             |   kwarg_list COMMA kwarg
 
+literal :  name
+        |  number
+        |  string
+
 lookup_name : NAME
             | lookup_name DOT NAME
+
+name    :  NAME
+
+number  :  NUMBER
+
+string  :  STRING
 
 """
 
@@ -82,31 +90,9 @@ def arg_list_append(p):
     return arg_list
 
 
-@pg.production('expr : NAME')
-def expr_NAME(p):
-    """
-    Look up a NAME in Context
-    """
-    return ast.Subscript(
-        value=ast.Name(id='context', ctx=ast.Load()),
-        slice=ast.Index(value=ast.Str(s=p[0].getstr()), ctx=ast.Load()),
-        ctx=ast.Load(),
-    )
-
-
-@pg.production('expr : NUMBER')
-def expr_NUMBER(p):
-    number = p[0].getstr()
-    if '.' in number or 'e' in number or 'E' in number:
-        cast = float
-    else:
-        cast = int
-    return ast.Num(n=cast(number))
-
-
-@pg.production('expr : STRING')
-def expr_STRING(p):
-    return ast.Str(s=p[0].getstr()[1:-1])
+@pg.production('expr : literal')
+def expr_literal(p):
+    return p[0]
 
 
 @pg.production('expr : expr DOT NAME')
@@ -184,9 +170,7 @@ def expr_full_call(p):
     return build_call(func, args, kwargs)
 
 
-@pg.production('filter : PIPE lookup_name COLON NAME')
-@pg.production('filter : PIPE lookup_name COLON NUMBER')
-@pg.production('filter : PIPE lookup_name COLON STRING')
+@pg.production('filter : PIPE lookup_name COLON literal')
 def filter_colon_arg(p):
     _, filt, _, arg = p
     filter_name = get_lookup_name(filt)
@@ -250,6 +234,13 @@ def kwarg_list_append(p):
     return kwarg_list
 
 
+@pg.production('literal : name')
+@pg.production('literal : number')
+@pg.production('literal : string')
+def literal(p):
+    return p[0]
+
+
 @pg.production('lookup_name : NAME')
 def lookup_name_NAME(p):
     return [ast.Str(s=p[0].getstr())]
@@ -260,6 +251,33 @@ def lookup_name_append(p):
     lookup_name, _, name = p
     lookup_name.append(ast.Str(s=name.getstr()))
     return lookup_name
+
+
+@pg.production('name : NAME')
+def name_NAME(p):
+    """
+    Look up a NAME in Context
+    """
+    return ast.Subscript(
+        value=ast.Name(id='context', ctx=ast.Load()),
+        slice=ast.Index(value=ast.Str(s=p[0].getstr()), ctx=ast.Load()),
+        ctx=ast.Load(),
+    )
+
+
+@pg.production('number : NUMBER')
+def number_NUMBER(p):
+    number = p[0].getstr()
+    if '.' in number or 'e' in number or 'E' in number:
+        cast = float
+    else:
+        cast = int
+    return ast.Num(n=cast(number))
+
+
+@pg.production('string : STRING')
+def string_STRING(p):
+    return ast.Str(s=p[0].getstr()[1:-1])
 
 
 @pg.error
