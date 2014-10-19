@@ -3,7 +3,9 @@ import rply
 
 flg = rply.LexerGenerator()
 
-# Key words
+# Keywords
+flg.add('AND', r'and')
+flg.add('OR', r'or')
 flg.add('IN', r'in')
 flg.add('NOTIN', r'not in')
 flg.add('ISNOT', r'is not')

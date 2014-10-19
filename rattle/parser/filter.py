@@ -46,6 +46,9 @@ expr    :   literal
         |   expr DIV expr
         |   expr MOD expr
 
+        |   expr AND expr
+        |   expr OR expr
+
         |   expr EQUAL expr
         |   expr NEQUAL expr
         |   expr LT expr
@@ -143,6 +146,20 @@ def fpg_expr_binop(p):
     lterm, op, rterm = p
     operator = _binop_mapping[op.gettokentype()]
     return ast.BinOp(left=lterm, op=operator(), right=rterm)
+
+
+_boolop_mapping = {
+    'AND': ast.And,
+    'OR': ast.Or,
+}
+
+
+@fpg.production('expr : expr AND expr')
+@fpg.production('expr : expr OR expr')
+def fpg_expr_boolop(p):
+    lterm, op, rterm = p
+    operator = _boolop_mapping[op.gettokentype()]
+    return ast.BoolOp(op=operator(), values=[lterm, rterm])
 
 
 _cmpop_mapping = {
