@@ -96,7 +96,7 @@ def tag_if(p):
 def tag_if_impl(p):
     ts, _, condition, _, body, _, _, _ = p
     # TODO: parse condition
-    test = update_source_pos(ast.NameConstant(value=True), condition)  # condition
+    test = update_source_pos(ast.Name(id='True', ctx=ast.Load()), condition)  # condition
     return update_source_pos(ast.IfExp(
         test=test,
         body=build_str_join(build_str_list_comp(body)),

@@ -24,9 +24,6 @@ class IfTest(TemplateTestCase):
             # ('Foo {% if False %}Hello{% endif %} Bar', 'Foo  Bar'),
         )
         for src, expect in TESTS:
-            print("\n\n\n")
-            print(src)
-            print(expect)
             tmpl = Template(src)
             output = tmpl.render()
             self.assertRendered(output, expect, src)
