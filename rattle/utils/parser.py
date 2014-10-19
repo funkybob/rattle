@@ -21,6 +21,35 @@ def build_call(func, args=[], kwargs=[]):
     )
 
 
+def build_str_join(l):
+    return build_call(
+        func=ast.Attribute(value=ast.Str(s=''), attr='join', ctx=ast.Load()),
+        args=[l]
+    )
+
+
+def build_str_list_comp(l):
+    if isinstance(l, ast.Str):
+        return l
+    elif not isinstance(l, list):
+        l = [l]
+    return ast.ListComp(
+        elt=build_call(
+            ast.Name(id='str', ctx=ast.Load()),
+            args=[
+                ast.Name(id='x', ctx=ast.Load()),
+            ],
+        ),
+        generators=[
+            ast.comprehension(
+                target=ast.Name(id='x', ctx=ast.Store()),
+                iter=ast.List(elts=l, ctx=ast.Load()),
+                ifs=[]
+            )
+        ]
+    )
+
+
 def get_filter_func(name):
     """
     Looks up the filter given by ``name`` in a context variable ``'filters'``.
@@ -57,3 +86,9 @@ def get_lookup_name(names):
         ctx=ast.Load()
     )]
     return build_call(func, args)
+
+
+def update_source_pos(node, token):
+    node.lineno = token.source_pos.lineno
+    node.col_offset = token.source_pos.colno
+    return node

@@ -2,9 +2,9 @@ import ast
 import os
 
 from .astpp import dump as ast_dump
-from .parser import pg, lg
-from .tokenise import tokenise, TOKEN_TEXT, TOKEN_VAR, TOKEN_BLOCK
-from .utils.parser import build_call
+from .lexer.structure import slg
+from .parser.structure import spg
+from .utils.parser import build_call, build_str_list_comp
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
@@ -68,7 +68,7 @@ class Library(object):
             self._ambiguous_filters.add(name)
             del self._filters[name]
         self._filters[full_name] = func
-        # Allows user as decorator
+        # Allows use as decorator
         return func
 
     def unregister_filter(self, full_name):
@@ -86,7 +86,7 @@ class Library(object):
             self._ambiguous_tags.add(name)
             del self._tags[name]
         self._tags[full_name] = func
-        # Allows user as decorator
+        # Allows use as decorator
         return func
 
     def unregister_tag(self, full_name):
@@ -107,8 +107,8 @@ class Template(object):
         # A list of compiled tags
         self.compiled_tags = []
 
-        self.lexer = lg.build()
-        self.parser = pg.build()
+        self.structure_lexer = slg.build()
+        self.structure_parser = spg.build()
 
         code = self.parse()
         ast.fix_missing_locations(code)
@@ -122,81 +122,14 @@ class Template(object):
             'None': None,
         }
 
-    def _token_to_code(self, token):
-        """
-        Given a Token instance, convert it to AST
-        """
-        code = None
-        if token.mode == TOKEN_TEXT:
-            code = ast.Str(s=token.content)
-        elif token.mode == TOKEN_VAR:
-            # parse
-            code = self.parser.parse(self.lexer.lex(token.content))
-            code = build_call(
-                ast.Name(id='auto_escape', ctx=ast.Load()),
-                args=[code]
-            )
-        elif token.mode == TOKEN_BLOCK:
-            # Parse args/kwargs
-            parsed = self.token_parser.parse(self.lexer.lex(token.content))
-            token = parsed.pop(0)
-            args = []
-            kwargs = []
-            for arg in all_args:
-                if isinstance(arg, ast.keyword):
-                    kwargs.append(arg)
-                else:
-                    args.append(arg)
-            tag = self.tags[tag_name](self, *args, **kwargs)
-            # place tag code in local "compiled_tags" storage
-            self.compiled_tags.append(tag)
-            code = build_call(
-                ast.Subscript(
-                    value=ast.Name(id='compiled_tags', ctx=ast.Load()),
-                    slice=ast.Index(
-                        value=ast.Num(n=len(self.compiled_tags)-1),
-                        ctx=ast.Load()
-                    ),
-                    ctx=ast.Load(),
-                ),
-                args=args,
-                keywords=kwargs,
-            )
-        else:
-            # Must be a comment
-            pass
-
-        if code is not None:
-            return token._position(code)
-
     def parse(self):
         """
         Convert the parsed tokens into a list of expressions then join them
         """
-        self.stream = tokenise(self.source)
-        steps = []
-        for token in self.stream:
-            code = self._token_to_code(token)
-            if code:
-                steps.append(code)
-
-        # result = [str(x) for x in steps]
+        tokens = self.structure_lexer.lex(self.source)
+        parsed = self.structure_parser.parse(tokens)
         return ast.Expression(
-            body=ast.ListComp(
-                elt=build_call(
-                    ast.Name(id='str', ctx=ast.Load()),
-                    args=[
-                        ast.Name(id='x', ctx=ast.Load()),
-                    ],
-                ),
-                generators=[
-                    ast.comprehension(
-                        target=ast.Name(id='x', ctx=ast.Store()),
-                        iter=ast.List(elts=steps, ctx=ast.Load()),
-                        ifs=[]
-                    )
-                ]
-            )
+            body=build_str_list_comp(parsed)
         )
 
     def render(self, context={}):

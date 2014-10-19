@@ -4,7 +4,7 @@ import unittest
 from rattle import library, Template
 
 import tests.filters  # necessary to register test filters
-from tests.utils import Mock
+from tests.utils import Mock, TemplateTestCase
 
 
 PY3 = sys.version_info[0] == 3
@@ -18,28 +18,25 @@ def hello_filter(arg1):
     return 'Hello %s!' % arg1
 
 
-class TemplateTestCase(unittest.TestCase):
-
-    def assertRendered(self, actual, expected, template):
-        try:
-            self.assertEqual(actual, expected)
-        except Exception as e:
-            if hasattr(e, 'message'):
-                standardMsg = e.message
-            else:
-                standardMsg = ''
-            if isinstance(template, Template):
-                source = template.source
-            else:
-                source = template
-            msg = 'Failed rendering template %s:\n%s' % (source, standardMsg)
-            self.fail(msg)
-
-
 class LiteralSyntaxTest(TemplateTestCase):
 
-    def test_render_plain_text(self):
+    def test_render_plaintext(self):
+        tmpl = Template("Hello world!")
+        output = tmpl.render()
+        self.assertRendered(output, 'Hello world!', tmpl)
+
+    def test_render_plaintext_literal_literal(self):
+        tmpl = Template("{{ 'Hello '}}{{ 'world!' }}")
+        output = tmpl.render()
+        self.assertRendered(output, 'Hello world!', tmpl)
+
+    def test_render_plaintext_literal_plaintext(self):
         tmpl = Template("Hello {{ 'world' }}!")
+        output = tmpl.render()
+        self.assertRendered(output, 'Hello world!', tmpl)
+
+    def test_render_literal_plaintext(self):
+        tmpl = Template("{{ 'Hello' }} world!")
         output = tmpl.render()
         self.assertRendered(output, 'Hello world!', tmpl)
 
