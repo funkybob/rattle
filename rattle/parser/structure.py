@@ -28,11 +28,11 @@ doc  :  CONTENT
      |  doc var
      |  doc tag
 
+var  :  VS CONTENT VE
+
 tag  :  if
 
 if   :  TS IF CONTENT TE doc TS ENDIF TE
-
-var  :  VS CONTENT VE
 
 """
 
@@ -95,8 +95,9 @@ def tag_if(p):
 @spg.production('if : TS IF CONTENT TE doc TS ENDIF TE')
 def tag_if_impl(p):
     ts, _, condition, _, body, _, _, _ = p
-    # TODO: parse condition
-    test = update_source_pos(ast.Name(id='True', ctx=ast.Load()), condition)  # condition
+    filter_lexer = flg.build()
+    filter_parser = fpg.build()
+    test = filter_parser.parse(filter_lexer.lex(condition.getstr()))
     return update_source_pos(ast.IfExp(
         test=test,
         body=build_str_join(build_str_list_comp(body)),
