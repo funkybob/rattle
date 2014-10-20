@@ -24,9 +24,11 @@ spg = rply.ParserGenerator(
 doc  :  CONTENT
      |  var
      |  tag
+     |  comment
      |  doc CONTENT
      |  doc var
      |  doc tag
+     |  doc comment
 
 var  :  VS CONTENT VE
 
@@ -34,6 +36,8 @@ tag  :  if
 
 if   :  TS IF CONTENT TE doc TS ENDIF TE
      |  TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE
+
+comment : CS CONTENT CE
 
 """
 
@@ -45,12 +49,9 @@ def doc__CONTENT(p):
 
 
 @spg.production('doc : var')
-def doc__var(p):
-    return p
-
-
 @spg.production('doc : tag')
-def doc__tag(p):
+@spg.production('doc : comment')
+def doc__parsed(p):
     return p
 
 
@@ -72,6 +73,12 @@ def doc__doc_var(p):
 def doc__doc_tag(p):
     doc, var = p
     doc.append(var)
+    return doc
+
+
+@spg.production('doc : doc comment')
+def doc__doc_comment(p):
+    doc, _ = p
     return doc
 
 
@@ -117,6 +124,11 @@ def tag_if_else_impl(p):
         body=build_str_join(build_str_list_comp(body)),
         orelse=build_str_join(build_str_list_comp(orelse)),
     ), ts)
+
+
+@spg.production('comment : CS CONTENT CE')
+def comment(p):
+    return ast.Str(s='')
 
 
 @spg.error

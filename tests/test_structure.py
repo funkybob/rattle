@@ -8,6 +8,39 @@ from tests.utils import TemplateTestCase
 PY3 = sys.version_info[0] == 3
 
 
+class CommentTest(TemplateTestCase):
+
+    def test_inline_comment(self):
+        TESTS = (
+            ('{# abc #}', ''),
+            ('abc{# def #}', 'abc'),
+            ('abc {# def #}', 'abc '),
+            ('{# abc #}def', 'def'),
+            ('{# abc #} def', ' def'),
+            ('abc{# def #}ghi', 'abcghi'),
+            ('abc {# def #} ghi', 'abc  ghi'),
+        )
+        for src, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render()
+            self.assertRendered(output, expect, src)
+
+    def test_multiple_inline_comment(self):
+        TESTS = (
+            ('{# abc #}{# ABC #}', ''),
+            ('abc{# def #}ABC{# DEF #}', 'abcABC'),
+            ('abc {# def #}ABC {# DEF #}', 'abc ABC '),
+            ('{# abc #}def{# ABC #}DEF', 'defDEF'),
+            ('{# abc #} def{# ABC #} DEF', ' def DEF'),
+            ('abc{# def #}ghiABC{# DEF #}GHI', 'abcghiABCGHI'),
+            ('abc {# def #} ghiABC {# DEF #} GHI', 'abc  ghiABC  GHI'),
+        )
+        for src, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render()
+            self.assertRendered(output, expect, src)
+
+
 class IfTest(TemplateTestCase):
 
     def test_if_true(self):
