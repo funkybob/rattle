@@ -33,6 +33,7 @@ var  :  VS CONTENT VE
 tag  :  if
 
 if   :  TS IF CONTENT TE doc TS ENDIF TE
+     |  TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE
 
 """
 
@@ -68,7 +69,7 @@ def doc__doc_var(p):
 
 
 @spg.production('doc : doc tag')
-def doc__doc_var(p):
+def doc__doc_tag(p):
     doc, var = p
     doc.append(var)
     return doc
@@ -102,6 +103,19 @@ def tag_if_impl(p):
         test=test,
         body=build_str_join(build_str_list_comp(body)),
         orelse=ast.Str(s='')
+    ), ts)
+
+
+@spg.production('if : TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE')
+def tag_if_else_impl(p):
+    ts, _, condition, _, body, _, _, _, orelse, _, _, _ = p
+    filter_lexer = flg.build()
+    filter_parser = fpg.build()
+    test = filter_parser.parse(filter_lexer.lex(condition.getstr()))
+    return update_source_pos(ast.IfExp(
+        test=test,
+        body=build_str_join(build_str_list_comp(body)),
+        orelse=build_str_join(build_str_list_comp(orelse)),
     ), ts)
 
 
