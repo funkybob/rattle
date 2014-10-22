@@ -135,9 +135,12 @@ class Template(object):
     def render(self, context={}):
         ctx = context.copy()
         ctx.update(self.default_context)
-        return u''.join(eval(self.func, {}, {
+        global_ctx = {
+        }
+        local_ctx = {
             'context': ctx,
             'compiled_tags': self.compiled_tags,
             'filters': library.filters,
             'auto_escape': auto_escape,
-        }))
+        }
+        return u''.join(eval(self.func, global_ctx, local_ctx))

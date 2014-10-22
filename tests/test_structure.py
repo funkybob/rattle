@@ -175,6 +175,20 @@ class ForTest(TemplateTestCase):
             output = tmpl.render(ctx)
             self.assertRendered(output, expect, src)
 
+    def test_for_replacement(self):
+        TESTS = (
+            ('{% for a in b %}{{ a }}{% endfor %}', {'b': [1, 2, 3]}, '123'),
+            ('{% for a in b %}{{ a }}{% endfor %} world', {'b': [1, 2, 3]}, '123 world'),
+            ('{% for a in b %}{{ a }} {% endfor %} world', {'b': [1, 2, 3]}, '1 2 3  world'),
+            ('Hello {% for a in b %}{{ a }}{% endfor %}', {'b': [1, 2, 3]}, 'Hello 123'),
+            ('Hello{% for a in b %} {{ a }}{% endfor %}', {'b': [1, 2, 3]}, 'Hello 1 2 3'),
+            ('Hello {% for a in b %}{{ a }}{% endfor %} !', {'b': [1, 2, 3]}, 'Hello 123 !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
 
 class ForEmptyTest(TemplateTestCase):
 
@@ -192,6 +206,20 @@ class ForEmptyTest(TemplateTestCase):
             output = tmpl.render(ctx)
             self.assertRendered(output, expect, src)
 
+    def test_for_empty_replacement(self):
+        TESTS = (
+            ('{% for a in b %}.{% empty %}{{ c }}{{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'xx'),
+            ('{% for a in b %}.{% empty %}{{ c }}{% endfor %} world', {'b': [], 'c': 'x'}, 'x world'),
+            ('{% for a in b %}. {% empty %}{{ c }} {% endfor %} world', {'b': [], 'c': 'x'}, 'x  world'),
+            ('Hello {% for a in b %}.{% empty %}{{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'Hello x'),
+            ('Hello{% for a in b %} .{% empty %} {{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'Hello x'),
+            ('Hello {% for a in b %}.{% empty %}{{ c }}{% endfor %} !', {'b': [], 'c': 'x'}, 'Hello x !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
     def test_for_else(self):
         TESTS = (
             ('{% for a in b %}.{% else %}-{% endfor %}', {'b': []}, '-'),
@@ -200,6 +228,20 @@ class ForEmptyTest(TemplateTestCase):
             ('Hello {% for a in b %}.{% else %}-{% endfor %}', {'b': []}, 'Hello -'),
             ('Hello{% for a in b %} .{% else %} -{% endfor %}', {'b': []}, 'Hello -'),
             ('Hello {% for a in b %}.{% else %}-{% endfor %} !', {'b': []}, 'Hello - !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
+    def test_for_else_replacement(self):
+        TESTS = (
+            ('{% for a in b %}.{% else %}{{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'x'),
+            ('{% for a in b %}.{% else %}{{ c }}{% endfor %} world', {'b': [], 'c': 'x'}, 'x world'),
+            ('{% for a in b %}. {% else %}{{ c }} {% endfor %} world', {'b': [], 'c': 'x'}, 'x  world'),
+            ('Hello {% for a in b %}.{% else %}{{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'Hello x'),
+            ('Hello{% for a in b %} .{% else %} {{ c }}{% endfor %}', {'b': [], 'c': 'x'}, 'Hello x'),
+            ('Hello {% for a in b %}.{% else %}{{ c }}{% endfor %} !', {'b': [], 'c': 'x'}, 'Hello x !'),
         )
         for src, ctx, expect in TESTS:
             tmpl = Template(src)
