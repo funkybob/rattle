@@ -1,8 +1,10 @@
+from __future__ import print_function
 
-import unittest
 import os.path
+import unittest
 
-if __name__ == '__main__':
+
+def run():
     HERE = os.path.dirname(__file__)
 
     loader = unittest.loader.TestLoader()
@@ -27,3 +29,6 @@ if __name__ == '__main__':
             for module, traceback in result.failures:
                 print('[{}]\n{}\n\n'.format(module, traceback))
 
+
+if __name__ == '__main__':
+    run()
