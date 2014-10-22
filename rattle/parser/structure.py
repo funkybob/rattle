@@ -6,7 +6,7 @@ from .filter import fpg
 from ..lexer.filter import flg
 from ..lexer.structure import slg
 from ..utils.parser import (build_call, build_str_join, build_str_list_comp,
-    update_source_pos)
+    split_tag_args_string, update_source_pos)
 
 
 #: structure parser generator
@@ -33,9 +33,12 @@ doc  :  CONTENT
 var  :  VS CONTENT VE
 
 tag  :  if
+     |  for
 
 if   :  TS IF CONTENT TE doc TS ENDIF TE
      |  TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE
+
+for :  TS FOR CONTENT TE doc TS ENDFOR TE
 
 comment : CS CONTENT CE
 
@@ -96,6 +99,7 @@ def var__varstart_CONTENT_varend(p):
 
 
 @spg.production('tag : if')
+@spg.production('tag : for')
 def tag_if(p):
     return p[0]
 
@@ -122,6 +126,59 @@ def tag_if_else_impl(p):
     return update_source_pos(ast.IfExp(
         test=test,
         body=build_str_join(build_str_list_comp(body)),
+        orelse=build_str_join(build_str_list_comp(orelse)),
+    ), ts)
+
+
+@spg.production('for : TS FOR CONTENT TE doc TS ENDFOR TE')
+def tag_for_impl(p):
+    ts, _, args, _, body, _, _, _ = p
+    target, in_, var = split_tag_args_string(args.getstr())
+    if in_ != 'in':
+        raise ValueError('"in" expected in for loop arguments')
+    filter_lexer = flg.build()
+    filter_parser = fpg.build()
+    iterator = filter_parser.parse(filter_lexer.lex(var))
+    loop_body = ast.ListComp(
+        elt=build_str_join(build_str_list_comp(body)),
+        generators=[
+            ast.comprehension(
+                target=ast.Name(id=target, ctx=ast.Store()),
+                iter=iterator,
+                ifs=[]
+            )
+        ]
+    )
+    return update_source_pos(ast.IfExp(
+        test=iterator,
+        body=build_str_join(loop_body),
+        orelse=ast.Str(s=''),
+    ), ts)
+
+
+@spg.production('for : TS FOR CONTENT TE doc TS ELSE TE doc TS ENDFOR TE')
+@spg.production('for : TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE')
+def tag_for_else_impl(p):
+    ts, _, args, _, body, _, _, _, orelse, _, _, _ = p
+    target, in_, var = split_tag_args_string(args.getstr())
+    if in_ != 'in':
+        raise ValueError('"in" expected in for loop arguments')
+    filter_lexer = flg.build()
+    filter_parser = fpg.build()
+    iterator = filter_parser.parse(filter_lexer.lex(var))
+    loop_body = ast.ListComp(
+        elt=build_str_join(build_str_list_comp(body)),
+        generators=[
+            ast.comprehension(
+                target=ast.Name(id=target, ctx=ast.Store()),
+                iter=iterator,
+                ifs=[]
+            )
+        ]
+    )
+    return update_source_pos(ast.IfExp(
+        test=iterator,
+        body=build_str_join(loop_body),
         orelse=build_str_join(build_str_list_comp(orelse)),
     ), ts)
 

@@ -99,6 +99,9 @@ class IfTest(TemplateTestCase):
             output = tmpl.render()
             self.assertRendered(output, expect, src)
 
+
+class IfElseTest(TemplateTestCase):
+
     def test_if_else_true(self):
         TESTS = (
             ('{% if True %}abc{% else %}def{% endif %}', 'abc'),
@@ -153,4 +156,52 @@ class IfTest(TemplateTestCase):
         for src, expect in TESTS:
             tmpl = Template(src)
             output = tmpl.render()
+            self.assertRendered(output, expect, src)
+
+
+class ForTest(TemplateTestCase):
+
+    def test_for(self):
+        TESTS = (
+            ('{% for a in b %}.{% endfor %}', {'b': [1, 2, 3]}, '...'),
+            ('{% for a in b %}.{% endfor %} world', {'b': [1, 2, 3]}, '... world'),
+            ('{% for a in b %}. {% endfor %} world', {'b': [1, 2, 3]}, '. . .  world'),
+            ('Hello {% for a in b %}.{% endfor %}', {'b': [1, 2, 3]}, 'Hello ...'),
+            ('Hello{% for a in b %} .{% endfor %}', {'b': [1, 2, 3]}, 'Hello . . .'),
+            ('Hello {% for a in b %}.{% endfor %} !', {'b': [1, 2, 3]}, 'Hello ... !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
+
+class ForEmptyTest(TemplateTestCase):
+
+    def test_for_empty(self):
+        TESTS = (
+            ('{% for a in b %}.{% empty %}-{% endfor %}', {'b': []}, '-'),
+            ('{% for a in b %}.{% empty %}-{% endfor %} world', {'b': []}, '- world'),
+            ('{% for a in b %}. {% empty %}- {% endfor %} world', {'b': []}, '-  world'),
+            ('Hello {% for a in b %}.{% empty %}-{% endfor %}', {'b': []}, 'Hello -'),
+            ('Hello{% for a in b %} .{% empty %} -{% endfor %}', {'b': []}, 'Hello -'),
+            ('Hello {% for a in b %}.{% empty %}-{% endfor %} !', {'b': []}, 'Hello - !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
+    def test_for_else(self):
+        TESTS = (
+            ('{% for a in b %}.{% else %}-{% endfor %}', {'b': []}, '-'),
+            ('{% for a in b %}.{% else %}-{% endfor %} world', {'b': []}, '- world'),
+            ('{% for a in b %}. {% else %}- {% endfor %} world', {'b': []}, '-  world'),
+            ('Hello {% for a in b %}.{% else %}-{% endfor %}', {'b': []}, 'Hello -'),
+            ('Hello{% for a in b %} .{% else %} -{% endfor %}', {'b': []}, 'Hello -'),
+            ('Hello {% for a in b %}.{% else %}-{% endfor %} !', {'b': []}, 'Hello - !'),
+        )
+        for src, ctx, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
             self.assertRendered(output, expect, src)

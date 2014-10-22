@@ -24,3 +24,7 @@ slg.add('CONTENT', r'(?<!(\{[{%#])).*?(?=(\{[{%#])|(\s*[#%}]\})|$)')
 slg.add('IF', r'\s*if\s+')
 slg.add('ENDIF', r'\s*endif\s+')
 slg.add('ELSE', r'\s*else\s+')
+
+slg.add('FOR', r'\s*for\s+')
+slg.add('ENDFOR', r'\s*endfor\s+')
+slg.add('EMPTY', r'\s*empty\s+')
