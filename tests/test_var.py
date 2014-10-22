@@ -446,7 +446,7 @@ class FilterLookupTest(TemplateTestCase):
             self.assertRendered(output, expect, src)
 
 
-class OperatorsTest(TemplateTestCase):
+class BinaryOperatorsTest(TemplateTestCase):
 
     def test_add(self):
         # A list of (template, context, output)
@@ -563,6 +563,125 @@ class OperatorsTest(TemplateTestCase):
             ('{{ (a[0].x + a[1].x) * b.y[0] }}',
              {'a': [Mock(x=2), Mock(x=3)], 'b': Mock(y=[4])},
              '20'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+
+class ComparatorsTest(TemplateTestCase):
+
+    def test_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1==0 }}', {}, 'False'),
+            ('{{ 1==1 }}', {}, 'True'),
+            ('{{ 1==2 }}', {}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_nequal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1!=0 }}', {}, 'True'),
+            ('{{ 1!=1 }}', {}, 'False'),
+            ('{{ 1!=2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_less_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1<=0 }}', {}, 'False'),
+            ('{{ 1<=1 }}', {}, 'True'),
+            ('{{ 1<=2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_less(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 1<0 }}', {}, 'False'),
+            ('{{ 1<1 }}', {}, 'False'),
+            ('{{ 1<2 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_greater_equal(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0>=1 }}', {}, 'False'),
+            ('{{ 1>=1 }}', {}, 'True'),
+            ('{{ 2>=1 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_greater(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0>1 }}', {}, 'False'),
+            ('{{ 1>1 }}', {}, 'False'),
+            ('{{ 2>1 }}', {}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_in(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0 in a }}', {'a': [1, 2]}, 'False'),
+            ('{{ 1 in a }}', {'a': [1, 2]}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_notin(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0 not in a }}', {'a': [1, 2]}, 'True'),
+            ('{{ 1 not in a }}', {'a': [1, 2]}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_isnot(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ a is not a }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
+            ('{{ a is not b }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_is(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ a is a }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
+            ('{{ a is b }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
         )
         for src, context, expect in TESTS:
             tmpl = Template(src)

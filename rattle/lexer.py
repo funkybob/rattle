@@ -1,7 +1,19 @@
-
 import rply
 
+"""
+.. warning:
+
+    Watch the order in which the tokens are added to the lexer! In case of
+    ambiguity the *first matching* will win!
+"""
+
 lg = rply.LexerGenerator()
+
+# Key words
+lg.add('IN', r'in')
+lg.add('NOTIN', r'not in')
+lg.add('ISNOT', r'is not')
+lg.add('IS', r'is')
 
 # Literals
 lg.add('NUMBER', r'\d+(\.\d+|[eE]-?\d+)?')
@@ -20,10 +32,18 @@ lg.add('DOT', r'\.')
 lg.add('PIPE', r'\|')
 lg.add('COLON', r':')
 
-# Operators
-lg.add('ASSIGN', r'=')
+# Binary Operators
+lg.add('ASSIGN', r'=(?!=)')  # neg. lookahead. Needed due to rply restriction
 lg.add('PLUS', r'\+')
 lg.add('MINUS', r'-')
 lg.add('MUL', r'\*')
 lg.add('DIV', r'/')
 lg.add('MOD', r'%')
+
+# Comparators
+lg.add('EQUAL', r'==')
+lg.add('NEQUAL', r'!=')
+lg.add('LTE', r'<=')
+lg.add('LT', r'<')
+lg.add('GTE', r'>=')
+lg.add('GT', r'>')
