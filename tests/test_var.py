@@ -643,3 +643,47 @@ class ComparatorsTest(TemplateTestCase):
             tmpl = Template(src)
             output = tmpl.render(context)
             self.assertRendered(output, expect, src)
+
+    def test_in(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0 in a }}', {'a': [1, 2]}, 'False'),
+            ('{{ 1 in a }}', {'a': [1, 2]}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_notin(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ 0 not in a }}', {'a': [1, 2]}, 'True'),
+            ('{{ 1 not in a }}', {'a': [1, 2]}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_isnot(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ a is not a }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
+            ('{{ a is not b }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)
+
+    def test_is(self):
+        # A list of (template, context, output)
+        TESTS = (
+            ('{{ a is a }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
+            ('{{ a is b }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
+        )
+        for src, context, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(context)
+            self.assertRendered(output, expect, src)

@@ -9,6 +9,12 @@ import rply
 
 lg = rply.LexerGenerator()
 
+# Key words
+lg.add('IN', r'in')
+lg.add('NOTIN', r'not in')
+lg.add('ISNOT', r'is not')
+lg.add('IS', r'is')
+
 # Literals
 lg.add('NUMBER', r'\d+(\.\d+|[eE]-?\d+)?')
 lg.add('STRING', r"'.*?'|\".*?\"")

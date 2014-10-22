@@ -13,7 +13,11 @@ pg = rply.ParserGenerator(
         ('left', ['COMMA']),
         ('right', ['ASSIGN']),
         ('left', ['PIPE']),
-        ('left', ['EQUAL', 'NEQUAL', 'LT', 'LTE', 'GT', 'GTE']),
+        ('left', ['AND', 'OR']),
+        ('left', ['EQUAL', 'NEQUAL',
+                  'LT', 'LTE', 'GT', 'GTE',
+                  'IN', 'NOTIN',
+                  'ISNOT', 'IS']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['MUL', 'DIV', 'MOD']),
         ('left', ['LSQB', 'RSQB']),
@@ -44,6 +48,10 @@ expr    :   literal
         |   expr LTE expr
         |   expr GT expr
         |   expr GTE expr
+        |   expr IN expr
+        |   expr NOTIN expr
+        |   expr ISNOT expr
+        |   expr IS expr
 
         |   expr filter
         |   LPAREN expr RPAREN
@@ -142,6 +150,10 @@ _cmpop_mapping = {
     'LTE': ast.LtE,
     'GT': ast.Gt,
     'GTE': ast.GtE,
+    'IN': ast.In,
+    'NOTIN': ast.NotIn,
+    'ISNOT': ast.IsNot,
+    'IS': ast.Is,
 }
 
 
@@ -151,6 +163,10 @@ _cmpop_mapping = {
 @pg.production('expr : expr LT expr')
 @pg.production('expr : expr GTE expr')
 @pg.production('expr : expr GT expr')
+@pg.production('expr : expr IN expr')
+@pg.production('expr : expr NOTIN expr')
+@pg.production('expr : expr ISNOT expr')
+@pg.production('expr : expr IS expr')
 def expr_cmpop(p):
     lterm, op, rterm = p
     operator = _cmpop_mapping[op.gettokentype()]
