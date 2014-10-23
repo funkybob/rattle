@@ -136,11 +136,11 @@ class Template(object):
         ctx = context.copy()
         ctx.update(self.default_context)
         global_ctx = {
-        }
-        local_ctx = {
             'context': ctx,
             'compiled_tags': self.compiled_tags,
             'filters': library.filters,
             'auto_escape': auto_escape,
+        }
+        local_ctx = {
         }
         return u''.join(eval(self.func, global_ctx, local_ctx))
