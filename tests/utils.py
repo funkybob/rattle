@@ -11,17 +11,18 @@ class Mock(object):
 
 class TemplateTestCase(unittest.TestCase):
 
-    def assertRendered(self, actual, expected, template):
+    def assertRendered(self, source, expected, context=None):
         try:
-            self.assertEqual(actual, expected)
+            tmpl = Template(source)
+            rendered = tmpl.render({} if context is None else context)
+            self.assertEqual(rendered, expected)
         except Exception as e:
             if hasattr(e, 'message'):
                 standardMsg = e.message
+            elif hasattr(e, 'args') and len(e.args) > 0:
+                standardMsg = e.args[0]
             else:
                 standardMsg = ''
-            if isinstance(template, Template):
-                source = template.source
-            else:
-                source = template
-            msg = 'Failed rendering template %s:\n%s' % (source, standardMsg)
+            msg = 'Failed rendering template %s:\n%s: %s' % (
+                source, e.__class__.__name__, standardMsg)
             self.fail(msg)

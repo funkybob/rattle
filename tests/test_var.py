@@ -21,29 +21,19 @@ def hello_filter(arg1):
 class LiteralSyntaxTest(TemplateTestCase):
 
     def test_render_plaintext(self):
-        tmpl = Template("Hello world!")
-        output = tmpl.render()
-        self.assertRendered(output, 'Hello world!', tmpl)
+        self.assertRendered("Hello world!", 'Hello world!')
 
     def test_render_plaintext_literal_literal(self):
-        tmpl = Template("{{ 'Hello '}}{{ 'world!' }}")
-        output = tmpl.render()
-        self.assertRendered(output, 'Hello world!', tmpl)
+        self.assertRendered("{{ 'Hello '}}{{ 'world!' }}", 'Hello world!')
 
     def test_render_plaintext_literal_plaintext(self):
-        tmpl = Template("Hello {{ 'world' }}!")
-        output = tmpl.render()
-        self.assertRendered(output, 'Hello world!', tmpl)
+        self.assertRendered("Hello {{ 'world' }}!", 'Hello world!')
 
     def test_render_literal_plaintext(self):
-        tmpl = Template("{{ 'Hello' }} world!")
-        output = tmpl.render()
-        self.assertRendered(output, 'Hello world!', tmpl)
+        self.assertRendered("{{ 'Hello' }} world!", 'Hello world!')
 
     def test_renderStringLiteral(self):
-        tmpl = Template("{{ 'hello' }}")
-        output = tmpl.render()
-        self.assertRendered(output, 'hello', tmpl)
+        self.assertRendered("{{ 'hello' }}", 'hello')
 
     def test_renderNumLiteral(self):
         # A list of (template, context, output)
@@ -58,9 +48,7 @@ class LiteralSyntaxTest(TemplateTestCase):
             ('{{ 12E-1 }}', '1.2'),
         )
         for src, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render()
-            self.assertRendered(output, expect, src)
+            self.assertRendered(src, expect)
 
 
 class VariableSyntaxTest(TemplateTestCase):
@@ -70,10 +58,8 @@ class VariableSyntaxTest(TemplateTestCase):
         TESTS = (
             ('{{ a }}', {'a': 'yes'}, 'yes'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_index(self):
         # A list of (template, context, output)
@@ -82,10 +68,8 @@ class VariableSyntaxTest(TemplateTestCase):
             ('{{ a["b"] }}', {'a': {'b': 'yes'}}, 'yes'),
             ('{{ a[c] }}', {'a': {'b': 'yes', 'c': 'no'}, 'c': 'b'}, 'yes'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_attribute(self):
         # A list of (template, context, output)
@@ -94,10 +78,8 @@ class VariableSyntaxTest(TemplateTestCase):
             ('{{ a.b.c }}', {'a': Mock(b=Mock(c=1))}, '1'),
             ('{{ a["b"].c }}', {'a': {'b': Mock(c=1)}}, '1'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_function(self):
 
@@ -130,10 +112,8 @@ class VariableSyntaxTest(TemplateTestCase):
             ('{{ a(arg1=x, arg2=y) }}', {'a': f_args, 'x': 1, 'y': 2}, '1 2'),
             ('{{ a(x, arg2=y) }}', {'a': f_args, 'x': 1, 'y': 2}, '1 2'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
 
 class FilterLookupTest(TemplateTestCase):
@@ -161,286 +141,206 @@ class FilterLookupTest(TemplateTestCase):
             # LSQB / RSQB
             ('{{ a[1]|join(",") }}', {'a': ['yes', 'no']}, 'n,o'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_single_filter(self):
-        # A list of (template, context, output)
+        ctx = {'hello_filter': hello_filter}
         TESTS = (
-            ('{{ 42|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello 42!'),
-            ('{{ 13.37|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello 13.37!'),
-            ('{{ "world"|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello world!'),
+            ('{{ 42|hello_filter }}', 'Hello 42!'),
+            ('{{ 13.37|hello_filter }}', 'Hello 13.37!'),
+            ('{{ "world"|hello_filter }}', 'Hello world!'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_multiple_filters(self):
-        # A list of (template, context, output)
+        ctx = {'hello_filter': hello_filter}
         TESTS = (
-            ('{{ 42|bye_filter|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello Bye 42!!'),
-            ('{{ 13.37|bye_filter|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello Bye 13.37!!'),
-            ('{{ "world"|hello_filter|bye_filter }}',
-             {'hello_filter': hello_filter},
-             'Bye Hello world!!'),
-            ('{{ "world"|bye_filter|hello_filter }}',
-             {'hello_filter': hello_filter},
-             'Hello Bye world!!'),
+            ('{{ 42|bye_filter|hello_filter }}', 'Hello Bye 42!!'),
+            ('{{ 13.37|bye_filter|hello_filter }}', 'Hello Bye 13.37!!'),
+            ('{{ "world"|hello_filter|bye_filter }}', 'Bye Hello world!!'),
+            ('{{ "world"|bye_filter|hello_filter }}', 'Hello Bye world!!'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_single_filter_short_name(self):
-        # A list of (template, context, output)
         TESTS = (
-            ('{{ 42|quote }}', {}, '&quot;42&quot;'),
-            ('{{ 13.37|quote }}', {}, '&quot;13.37&quot;'),
-            ('{{ "world"|quote }}', {}, '&quot;world&quot;'),
+            ('{{ 42|quote }}', '&quot;42&quot;'),
+            ('{{ 13.37|quote }}', '&quot;13.37&quot;'),
+            ('{{ "world"|quote }}', '&quot;world&quot;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_single_filter_full_name(self):
-        # A list of (template, context, output)
         TESTS = (
-            ('{{ 42|tests.filters.quote }}', {}, '&quot;42&quot;'),
-            ('{{ 13.37|tests.filters.quote }}', {}, '&quot;13.37&quot;'),
-            ('{{ "world"|tests.filters.quote }}', {}, '&quot;world&quot;'),
+            ('{{ 42|tests.filters.quote }}', '&quot;42&quot;'),
+            ('{{ 13.37|tests.filters.quote }}', '&quot;13.37&quot;'),
+            ('{{ "world"|tests.filters.quote }}', '&quot;world&quot;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_multiple_filter_full_name(self):
-        # A list of (template, context, output)
         TESTS = (
             ('{{ 42|tests.filters.quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;42&quot;&#39;'),
             ('{{ 13.37|tests.filters.quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;13.37&quot;&#39;'),
             ('{{ "world"|tests.filters.quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_multiple_filter_short_name(self):
-        # A list of (template, context, output)
         TESTS = (
-            ('{{ 42|quote|squote }}', {}, '&#39;&quot;42&quot;&#39;'),
-            ('{{ 13.37|quote|squote }}', {}, '&#39;&quot;13.37&quot;&#39;'),
-            ('{{ "world"|quote|squote }}', {}, '&#39;&quot;world&quot;&#39;'),
+            ('{{ 42|quote|squote }}', '&#39;&quot;42&quot;&#39;'),
+            ('{{ 13.37|quote|squote }}', '&#39;&quot;13.37&quot;&#39;'),
+            ('{{ "world"|quote|squote }}', '&#39;&quot;world&quot;&#39;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_full_name_short_name(self):
-        # A list of (template, context, output)
         TESTS = (
             ('{{ 42|tests.filters.quote|squote }}',
-             {},
              '&#39;&quot;42&quot;&#39;'),
             ('{{ 13.37|tests.filters.quote|squote }}',
-             {},
              '&#39;&quot;13.37&quot;&#39;'),
             ('{{ "world"|tests.filters.quote|squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_short_name_full_name(self):
-        # A list of (template, context, output)
         TESTS = (
             ('{{ 42|quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;42&quot;&#39;'),
             ('{{ 13.37|quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;13.37&quot;&#39;'),
             ('{{ "world"|quote|tests.filters.squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_empty_call(self):
-        # A list of (template, context, output)
         TESTS = (
-            ('{{ "world"|quote() }}', {}, '&quot;world&quot;'),
-            ('{{ "world"|tests.filters.quote() }}', {}, '&quot;world&quot;'),
+            ('{{ "world"|quote() }}', '&quot;world&quot;'),
+            ('{{ "world"|tests.filters.quote() }}', '&quot;world&quot;'),
             ('{{ "world"|tests.filters.quote()|tests.filters.squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
-            ('{{ "world"|quote()|squote }}', {}, '&#39;&quot;world&quot;&#39;'),
+            ('{{ "world"|quote()|squote }}', '&#39;&quot;world&quot;&#39;'),
             ('{{ "world"|tests.filters.quote()|squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
             ('{{ "world"|quote()|tests.filters.squote }}',
-             {},
              '&#39;&quot;world&quot;&#39;'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_args_call(self):
-        # A list of (template, context, output)
+        ctx = {'a': ['A', 'B']}
         TESTS = (
-            ('{{ a|join(",") }}', {'a': ['A', 'B']}, 'A,B'),
-            ('{{ a|tests.filters.join(",") }}', {'a': ['A', 'B']}, 'A,B'),
-            ('{{ a|join(",")|join(":") }}', {'a': ['A', 'B']}, 'A:,:B'),
+            ('{{ a|join(",") }}', 'A,B'),
+            ('{{ a|tests.filters.join(",") }}', 'A,B'),
+            ('{{ a|join(",")|join(":") }}', 'A:,:B'),
             ('{{ a|tests.filters.join(",")|tests.filters.join(":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
             ('{{ a|tests.filters.join(",")|join(":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
             ('{{ a|join(",")|tests.filters.join(":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
+        )
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
-            # legacy syntax
+    def test_args_call_legacy(self):
+        TESTS = (
             ('{{ a|join:"," }}', {'a': ['1', '2', '3']}, '1,2,3'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_kwargs_call(self):
-        # A list of (template, context, output)
+        ctx = {'a': ['A', 'B']}
         TESTS = (
-            ('{{ a|join(sep=",") }}', {'a': ['A', 'B']}, 'A,B'),
-            ('{{ a|tests.filters.join(sep=",") }}', {'a': ['A', 'B']}, 'A,B'),
-            ('{{ a|join(sep=",")|join(sep=":") }}', {'a': ['A', 'B']}, 'A:,:B'),
+            ('{{ a|join(sep=",") }}', 'A,B'),
+            ('{{ a|tests.filters.join(sep=",") }}', 'A,B'),
+            ('{{ a|join(sep=",")|join(sep=":") }}', 'A:,:B'),
             ('{{ a|tests.filters.join(sep=",")|tests.filters.join(sep=":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
             ('{{ a|tests.filters.join(sep=",")|join(sep=":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
             ('{{ a|join(sep=",")|tests.filters.join(sep=":") }}',
-             {'a': ['A', 'B']},
              'A:,:B'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_full_call_args(self):
-        # A list of (template, context, output)
+        ctx = {'a': ['A', 'B']}
         TESTS = (
-            ('{{ a|lcjoin(",", True) }}', {'a': ['A', 'B']}, 'a,b'),
+            ('{{ a|lcjoin(",", True) }}', 'a,b'),
             ('{{ a|tests.filters.lcjoin(",", True) }}',
-             {'a': ['A', 'B']},
              'a,b'),
             ('{{ a|lcjoin(",", True)|lcjoin(":", True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
             ('{{ a|tests.filters.lcjoin(",", True)|tests.filters.lcjoin(":", True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
             ('{{ a|tests.filters.lcjoin(",", True)|lcjoin(":", True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
             ('{{ a|lcjoin(",", True)|tests.filters.lcjoin(":", True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_full_call_kwargs(self):
-        # A list of (template, context, output)
+        ctx = {'a': ['A', 'B']}
         TESTS = (
-            ('{{ a|lcjoin(sep=",", lower=True) }}', {'a': ['A', 'B']}, 'a,b'),
+            ('{{ a|lcjoin(sep=",", lower=True) }}', 'a,b'),
             ('{{ a|tests.filters.lcjoin(sep=",", lower=True) }}',
-             {'a': ['A', 'B']},
              'a,b'),
             ('{{ a|lcjoin(sep=",", lower=True)|lcjoin(sep=":", lower=True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|tests.filters.lcjoin(sep=",", lower=True)'
               '|tests.filters.lcjoin(sep=":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|tests.filters.lcjoin(sep=",", lower=True)'
               '|lcjoin(sep=":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|lcjoin(sep=",", lower=True)'
               '|tests.filters.lcjoin(sep=":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_full_call_mixed(self):
-        # A list of (template, context, output)
+        ctx = {'a': ['A', 'B']}
         TESTS = (
-            ('{{ a|lcjoin(",", lower=True) }}', {'a': ['A', 'B']}, 'a,b'),
+            ('{{ a|lcjoin(",", lower=True) }}', 'a,b'),
             ('{{ a|tests.filters.lcjoin(",", lower=True) }}',
-             {'a': ['A', 'B']},
              'a,b'),
             ('{{ a|lcjoin(",", lower=True)|lcjoin(":", lower=True) }}',
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|tests.filters.lcjoin(",", lower=True)'
               '|tests.filters.lcjoin(":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|tests.filters.lcjoin(",", lower=True)'
               '|lcjoin(":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
             (('{{ a|lcjoin(",", lower=True)'
               '|tests.filters.lcjoin(":", lower=True) }}'),
-             {'a': ['A', 'B']},
              'a:,:b'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
 
 class BinaryOperatorsTest(TemplateTestCase):
@@ -460,10 +360,8 @@ class BinaryOperatorsTest(TemplateTestCase):
             ('{{ a + b }}', {'a': 1.8, 'b': 2.9}, '4.7'),
             ('{{ a + a }}', {'a': 1.8}, '3.6'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_sub(self):
         # A list of (template, context, output)
@@ -480,10 +378,8 @@ class BinaryOperatorsTest(TemplateTestCase):
             ('{{ a - b }}', {'a': 2.9, 'b': 1.7}, '1.2'),
             ('{{ a - a }}', {'a': 2.9}, '0.0'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_mult(self):
         # A list of (template, context, output)
@@ -500,10 +396,8 @@ class BinaryOperatorsTest(TemplateTestCase):
             ('{{ a * b }}', {'a': 1.5, 'b': 3.9}, '5.85'),
             ('{{ a * a }}', {'a': 1.5}, '2.25'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_div(self):
         # A list of (template, context, output)
@@ -520,10 +414,8 @@ class BinaryOperatorsTest(TemplateTestCase):
             ('{{ a / b }}', {'a': 3.5, 'b': 1.4}, '2.5'),
             ('{{ a / a }}', {'a': 3.5}, '1.0'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_mod(self):
         # A list of (template, context, output)
@@ -540,10 +432,8 @@ class BinaryOperatorsTest(TemplateTestCase):
             ('{{ a % b }}', {'a': 2.0, 'b': 1.2}, '0.8'),
             ('{{ a % a }}', {'a': 2.0}, '0.0'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_mixed(self):
         # A list of (template, context, output)
@@ -561,10 +451,8 @@ class BinaryOperatorsTest(TemplateTestCase):
              {'a': [Mock(x=2), Mock(x=3)], 'b': Mock(y=[4])},
              '20'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
 
 class ComparatorsTest(TemplateTestCase):
@@ -572,85 +460,70 @@ class ComparatorsTest(TemplateTestCase):
     def test_equal(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 1==0 }}', {}, 'False'),
-            ('{{ 1==1 }}', {}, 'True'),
-            ('{{ 1==2 }}', {}, 'False'),
+            ('{{ 1==0 }}', 'False'),
+            ('{{ 1==1 }}', 'True'),
+            ('{{ 1==2 }}', 'False'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_nequal(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 1!=0 }}', {}, 'True'),
-            ('{{ 1!=1 }}', {}, 'False'),
-            ('{{ 1!=2 }}', {}, 'True'),
+            ('{{ 1!=0 }}', 'True'),
+            ('{{ 1!=1 }}', 'False'),
+            ('{{ 1!=2 }}', 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_less_equal(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 1<=0 }}', {}, 'False'),
-            ('{{ 1<=1 }}', {}, 'True'),
-            ('{{ 1<=2 }}', {}, 'True'),
+            ('{{ 1<=0 }}', 'False'),
+            ('{{ 1<=1 }}', 'True'),
+            ('{{ 1<=2 }}', 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_less(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 1<0 }}', {}, 'False'),
-            ('{{ 1<1 }}', {}, 'False'),
-            ('{{ 1<2 }}', {}, 'True'),
+            ('{{ 1<0 }}', 'False'),
+            ('{{ 1<1 }}', 'False'),
+            ('{{ 1<2 }}', 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_greater_equal(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 0>=1 }}', {}, 'False'),
-            ('{{ 1>=1 }}', {}, 'True'),
-            ('{{ 2>=1 }}', {}, 'True'),
+            ('{{ 0>=1 }}', 'False'),
+            ('{{ 1>=1 }}', 'True'),
+            ('{{ 2>=1 }}', 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_greater(self):
         # A list of (template, context, output)
         TESTS = (
-            ('{{ 0>1 }}', {}, 'False'),
-            ('{{ 1>1 }}', {}, 'False'),
-            ('{{ 2>1 }}', {}, 'True'),
+            ('{{ 0>1 }}', 'False'),
+            ('{{ 1>1 }}', 'False'),
+            ('{{ 2>1 }}', 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, expect in TESTS:
+            self.assertRendered(src, expect)
 
     def test_in(self):
-        # A list of (template, context, output)
         TESTS = (
             ('{{ 0 in a }}', {'a': [1, 2]}, 'False'),
             ('{{ 1 in a }}', {'a': [1, 2]}, 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_notin(self):
         # A list of (template, context, output)
@@ -658,10 +531,8 @@ class ComparatorsTest(TemplateTestCase):
             ('{{ 0 not in a }}', {'a': [1, 2]}, 'True'),
             ('{{ 1 not in a }}', {'a': [1, 2]}, 'False'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_isnot(self):
         # A list of (template, context, output)
@@ -669,10 +540,8 @@ class ComparatorsTest(TemplateTestCase):
             ('{{ a is not a }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
             ('{{ a is not b }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
 
     def test_is(self):
         # A list of (template, context, output)
@@ -680,7 +549,5 @@ class ComparatorsTest(TemplateTestCase):
             ('{{ a is a }}', {'a': [1, 2], 'b': [3, 4]}, 'True'),
             ('{{ a is b }}', {'a': [1, 2], 'b': [3, 4]}, 'False'),
         )
-        for src, context, expect in TESTS:
-            tmpl = Template(src)
-            output = tmpl.render(context)
-            self.assertRendered(output, expect, src)
+        for src, ctx, expect in TESTS:
+            self.assertRendered(src, expect, ctx)
