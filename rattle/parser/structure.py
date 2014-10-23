@@ -145,7 +145,7 @@ def tag_for_impl(p):
             ast.comprehension(
                 target=ast.Subscript(
                     value=ast.Name(id='context', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Str(s='a')),
+                    slice=ast.Index(value=ast.Str(s=target)),
                     ctx=ast.Store()
                 ),
                 iter=iterator,
@@ -176,7 +176,7 @@ def tag_for_else_impl(p):
             ast.comprehension(
                 target=ast.Subscript(
                     value=ast.Name(id='context', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Str(s='a')),
+                    slice=ast.Index(value=ast.Str(s=target)),
                     ctx=ast.Store()
                 ),
                 iter=iterator,

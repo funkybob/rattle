@@ -189,6 +189,26 @@ class ForTest(TemplateTestCase):
             output = tmpl.render(ctx)
             self.assertRendered(output, expect, src)
 
+    def test_for_nested(self):
+        ctx = {'b': [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
+        TESTS = (
+            ('{% for a in b %}{% for c in a %}.{% endfor %}-{% endfor %}', '...-...-...-'),
+        )
+        for src, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
+    def test_for_nested_replacement(self):
+        ctx = {'b': [[1, 2, 3], [4, 5, 6], [7, 8, 9]]}
+        TESTS = (
+            ('{% for a in b %}{% for c in a %}{{ c }}{% endfor %}-{% endfor %}', '123-456-789-'),
+        )
+        for src, expect in TESTS:
+            tmpl = Template(src)
+            output = tmpl.render(ctx)
+            self.assertRendered(output, expect, src)
+
 
 class ForEmptyTest(TemplateTestCase):
 
