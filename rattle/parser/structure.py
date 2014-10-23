@@ -143,7 +143,11 @@ def tag_for_impl(p):
         elt=build_str_join(build_str_list_comp(body)),
         generators=[
             ast.comprehension(
-                target=ast.Name(id=target, ctx=ast.Store()),
+                target=ast.Subscript(
+                    value=ast.Name(id='context', ctx=ast.Load()),
+                    slice=ast.Index(value=ast.Str(s='a')),
+                    ctx=ast.Store()
+                ),
                 iter=iterator,
                 ifs=[]
             )
@@ -170,7 +174,11 @@ def tag_for_else_impl(p):
         elt=build_str_join(build_str_list_comp(body)),
         generators=[
             ast.comprehension(
-                target=ast.Name(id=target, ctx=ast.Store()),
+                target=ast.Subscript(
+                    value=ast.Name(id='context', ctx=ast.Load()),
+                    slice=ast.Index(value=ast.Str(s='a')),
+                    ctx=ast.Store()
+                ),
                 iter=iterator,
                 ifs=[]
             )
