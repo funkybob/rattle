@@ -15,7 +15,7 @@ and PEP-8-ifight.
 import ast
 
 
-def dump(node, annotate_fields=True, include_attributes=False, indent='  '):
+def dump(node, annotate_fields=True, include_attributes=True, indent='  '):
     """
     Return a formatted dump of the tree in *node*. This is mainly useful for
     debugging purposes. The returned string will show the names and the values
