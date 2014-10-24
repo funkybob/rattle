@@ -272,8 +272,7 @@ def fpg_filter_pipe_lookup_kwargs_call(p):
     return filter_func, [], kwargs
 
 
-@fpg.production('filter : '
-                'PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
+@fpg.production('filter : PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
 def fpg_filter_pipe_lookup_full_call(p):
     _, filter, _, args, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)

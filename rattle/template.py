@@ -1,9 +1,9 @@
 import ast
 import os
 
-from .astpp import dump as ast_dump
 from .lexer import lexers
 from .parser import parsers
+from .utils.astpp import dump as ast_dump
 from .utils.parser import build_str_list_comp
 
 

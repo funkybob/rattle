@@ -1,0 +1,4 @@
+[run]
+branch = True
+source = rattle/
+omit = rattle/utils/astpp.py
