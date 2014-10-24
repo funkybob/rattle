@@ -1,6 +1,6 @@
 """
-A pretty-printing dump function for the ast module. The code was copied from the
-ast.dump function and modified slightly to pretty-print.
+A pretty-printing dump function for the ast module. The code was copied from
+the ast.dump function and modified slightly to pretty-print.
 
 Alex Leone (acleone ~AT~ gmail.com), 2010-01-30
 

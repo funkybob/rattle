@@ -133,8 +133,8 @@ def split_tag_args_string(s):
         if squote:
             raise ValueError('Un-closed single quote in `%s`' % s)
         if parens > 0:
-            raise ValueError('Un-closed parenthesis (%d still open) in `%s`' % (
-                             parens, s))
+            raise ValueError('Un-closed parenthesis (%d still open) in `%s`' %
+                             (parens, s))
         if escaped:
             raise ValueError('Un-used escaping in `%s`' % s)
     return args

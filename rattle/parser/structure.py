@@ -1,22 +1,17 @@
 import ast
 
-import rply
-
-from .filter import fpg
-from ..lexer.filter import flg
-from ..lexer.structure import slg
+from . import parsers
+from ..lexer import lexers
 from ..utils.parser import (build_call, build_str_join, build_str_list_comp,
-    split_tag_args_string, update_source_pos)
+                            split_tag_args_string, update_source_pos)
 
 
 #: structure parser generator
 #:
 #: Useed to tokenize and split the template at ``{{``, ``{%``, ``{#``, ``}}``,
 #: ``%}`` and ``#}``
-spg = rply.ParserGenerator(
-    [rule.name for rule in slg.rules],
-    precedence=[]
-)
+spg = parsers.spg
+spg.precedence = []
 
 
 """
@@ -87,9 +82,7 @@ def doc__doc_comment(p):
 
 @spg.production('var : VS CONTENT VE')
 def var__varstart_CONTENT_varend(p):
-    filter_lexer = flg.build()
-    filter_parser = fpg.build()
-    content = filter_parser.parse(filter_lexer.lex(p[1].getstr()))
+    content = parsers.fp.parse(lexers.fl.lex(p[1].getstr()))
     return build_call(
         func=ast.Name(id='auto_escape', ctx=ast.Load()),
         args=[
@@ -107,9 +100,7 @@ def tag_if(p):
 @spg.production('if : TS IF CONTENT TE doc TS ENDIF TE')
 def tag_if_impl(p):
     ts, _, condition, _, body, _, _, _ = p
-    filter_lexer = flg.build()
-    filter_parser = fpg.build()
-    test = filter_parser.parse(filter_lexer.lex(condition.getstr()))
+    test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
     return update_source_pos(ast.IfExp(
         test=test,
         body=build_str_join(build_str_list_comp(body)),
@@ -120,9 +111,7 @@ def tag_if_impl(p):
 @spg.production('if : TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE')
 def tag_if_else_impl(p):
     ts, _, condition, _, body, _, _, _, orelse, _, _, _ = p
-    filter_lexer = flg.build()
-    filter_parser = fpg.build()
-    test = filter_parser.parse(filter_lexer.lex(condition.getstr()))
+    test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
     return update_source_pos(ast.IfExp(
         test=test,
         body=build_str_join(build_str_list_comp(body)),
@@ -136,9 +125,7 @@ def tag_for_impl(p):
     target, in_, var = split_tag_args_string(args.getstr())
     if in_ != 'in':
         raise ValueError('"in" expected in for loop arguments')
-    filter_lexer = flg.build()
-    filter_parser = fpg.build()
-    iterator = filter_parser.parse(filter_lexer.lex(var))
+    iterator = parsers.fp.parse(lexers.fl.lex(var))
     loop_body = ast.ListComp(
         elt=build_str_join(build_str_list_comp(body)),
         generators=[
@@ -167,9 +154,7 @@ def tag_for_else_impl(p):
     target, in_, var = split_tag_args_string(args.getstr())
     if in_ != 'in':
         raise ValueError('"in" expected in for loop arguments')
-    filter_lexer = flg.build()
-    filter_parser = fpg.build()
-    iterator = filter_parser.parse(filter_lexer.lex(var))
+    iterator = parsers.fp.parse(lexers.fl.lex(var))
     loop_body = ast.ListComp(
         elt=build_str_join(build_str_list_comp(body)),
         generators=[

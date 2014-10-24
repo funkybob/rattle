@@ -1,1 +1,1 @@
-from .template import library, Template
+from .template import library, Template  # noqa
