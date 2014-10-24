@@ -1,8 +1,7 @@
 import ast
 
-import rply
+from . import parsers
 
-from ..lexer.filter import flg
 from ..utils.parser import build_call, get_filter_func, get_lookup_name
 
 
@@ -10,24 +9,22 @@ from ..utils.parser import build_call, get_filter_func, get_lookup_name
 #:
 #: Used to tokenize content inside ``{{`` and ``}}`` as well as the args and
 #: kwargs in tags
-fpg = rply.ParserGenerator(
-    [rule.name for rule in flg.rules],
-    precedence=[
-        ('left', ['COMMA']),
-        ('right', ['ASSIGN']),
-        ('left', ['PIPE']),
-        ('left', ['AND', 'OR']),
-        ('left', ['EQUAL', 'NEQUAL',
-                  'LT', 'LTE', 'GT', 'GTE',
-                  'IN', 'NOTIN',
-                  'ISNOT', 'IS']),
-        ('left', ['PLUS', 'MINUS']),
-        ('left', ['MUL', 'DIV', 'MOD']),
-        ('left', ['LSQB', 'RSQB']),
-        ('left', ['DOT']),
-        ('left', ['LPAREN', 'RPAREN']),
-    ],
-)
+fpg = parsers.fpg
+fpg.precedence = [
+    ('left', ['COMMA']),
+    ('right', ['ASSIGN']),
+    ('left', ['PIPE']),
+    ('left', ['AND', 'OR']),
+    ('left', ['EQUAL', 'NEQUAL',
+              'LT', 'LTE', 'GT', 'GTE',
+              'IN', 'NOTIN',
+              'ISNOT', 'IS']),
+    ('left', ['PLUS', 'MINUS']),
+    ('left', ['MUL', 'DIV', 'MOD']),
+    ('left', ['LSQB', 'RSQB']),
+    ('left', ['DOT']),
+    ('left', ['LPAREN', 'RPAREN']),
+]
 
 
 """
@@ -275,7 +272,8 @@ def fpg_filter_pipe_lookup_kwargs_call(p):
     return filter_func, [], kwargs
 
 
-@fpg.production('filter : PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
+@fpg.production('filter : '
+                'PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
 def fpg_filter_pipe_lookup_full_call(p):
     _, filter, _, args, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)

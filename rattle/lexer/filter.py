@@ -1,7 +1,6 @@
-import rply
+from . import lexers
 
-
-flg = rply.LexerGenerator()
+flg = lexers.flg
 
 # Keywords
 flg.add('AND', r'and')

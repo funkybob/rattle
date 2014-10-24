@@ -2,9 +2,9 @@ import ast
 import os
 
 from .astpp import dump as ast_dump
-from .lexer.structure import slg
-from .parser.structure import spg
-from .utils.parser import build_call, build_str_list_comp
+from .lexer import lexers
+from .parser import parsers
+from .utils.parser import build_str_list_comp
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
@@ -107,9 +107,6 @@ class Template(object):
         # A list of compiled tags
         self.compiled_tags = []
 
-        self.structure_lexer = slg.build()
-        self.structure_parser = spg.build()
-
         code = self.parse()
         ast.fix_missing_locations(code)
         if AST_DEBUG:
@@ -126,8 +123,8 @@ class Template(object):
         """
         Convert the parsed tokens into a list of expressions then join them
         """
-        tokens = self.structure_lexer.lex(self.source)
-        parsed = self.structure_parser.parse(tokens)
+        tokens = lexers.sl.lex(self.source)
+        parsed = parsers.sp.parse(tokens)
         return ast.Expression(
             body=build_str_list_comp(parsed)
         )

@@ -1,7 +1,7 @@
-import rply
+from . import lexers
 
 
-slg = rply.LexerGenerator()
+slg = lexers.slg
 
 slg.add('VS', r'\{\{\s*')
 slg.add('VE', r'\s*\}\}')
