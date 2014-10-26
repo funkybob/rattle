@@ -80,40 +80,6 @@ def build_str_join(l):
     )
 
 
-def build_str_list_comp(l):
-    """
-    Casts every element in l to ``str``.
-
-    This is equivalent to::
-
-        if isinstance(l, str):
-            return l
-        if not isinstance(l, list):
-            l = [l]
-        [str(x) for x in l]
-
-    """
-    if isinstance(l, ast.Str):
-        return l
-    if not isinstance(l, list):
-        l = [l]
-    return ast.ListComp(
-        elt=build_call(
-            ast.Name(id='str', ctx=ast.Load()),
-            args=[
-                ast.Name(id='x', ctx=ast.Load()),
-            ],
-        ),
-        generators=[
-            ast.comprehension(
-                target=ast.Name(id='x', ctx=ast.Store()),
-                iter=ast.List(elts=l, ctx=ast.Load()),
-                ifs=[]
-            )
-        ]
-    )
-
-
 def get_filter_func(name):
     """
     Looks up the filter given by ``name`` in a context variable ``'filters'``.

@@ -4,7 +4,7 @@ import os
 from .lexer import lexers
 from .parser import parsers
 from .utils.astpp import dump as ast_dump
-from .utils.parser import build_str_join, build_str_list_comp
+from .utils.parser import build_str_join
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
@@ -139,9 +139,6 @@ class Template(object):
 
         return ast.Module(
             body=parsed
-        )
-        return ast.Expression(
-            body=build_str_list_comp(parsed)
         )
 
     def render(self, context={}):
