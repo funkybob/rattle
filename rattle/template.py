@@ -4,7 +4,7 @@ import os
 from .lexer import lexers
 from .parser import parsers
 from .utils.astpp import dump as ast_dump
-from .utils.parser import build_str_list_comp
+from .utils.parser import build_str_join, build_str_list_comp
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
@@ -111,7 +111,7 @@ class Template(object):
         ast.fix_missing_locations(code)
         if AST_DEBUG:
             print(ast_dump(code))
-        self.func = compile(code, filename="<template>", mode="eval")
+        self.func = compile(code, filename="<template>", mode="exec")
 
         self.default_context = {
             'True': True,
@@ -125,6 +125,21 @@ class Template(object):
         """
         tokens = lexers.sl.lex(self.source)
         parsed = parsers.sp.parse(tokens)
+        parsed.append(
+            ast.Global(names=['rendered'])
+        )
+        parsed.append(
+            ast.Assign(
+                targets=[ast.Name(id='rendered', ctx=ast.Store())],
+                value=build_str_join(
+                    ast.Name(id='output', ctx=ast.Load())
+                )
+            )
+        )
+
+        return ast.Module(
+            body=parsed
+        )
         return ast.Expression(
             body=build_str_list_comp(parsed)
         )
@@ -137,7 +152,10 @@ class Template(object):
             'compiled_tags': self.compiled_tags,
             'filters': library.filters,
             'auto_escape': auto_escape,
+            'output': [],
+            'rendered': None
         }
         local_ctx = {
         }
-        return u''.join(eval(self.func, global_ctx, local_ctx))
+        eval(self.func, global_ctx, local_ctx)
+        return global_ctx['rendered']

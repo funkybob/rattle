@@ -24,6 +24,19 @@ def production(generator, *rules):
     return wrapper
 
 
+def add_data(s):
+    return ast.Expr(
+        value=build_call(
+            func=ast.Attribute(
+                value=ast.Name(id='output', ctx=ast.Load()),
+                attr='append',
+                ctx=ast.Load()
+            ),
+            args=[s]
+        )
+    )
+
+
 def build_call(func, args=[], kwargs=[]):
     """
     Constructs a :class:`ast.Call` node that calls the given function ``func``

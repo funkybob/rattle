@@ -2,8 +2,8 @@ import ast
 
 from . import parsers
 from ..lexer import lexers
-from ..utils.parser import (build_call, build_str_join, build_str_list_comp,
-    production, split_tag_args_string, update_source_pos)
+from ..utils.parser import (add_data, build_call, production,
+    split_tag_args_string, update_source_pos)
 
 
 spg = parsers.spg
@@ -46,7 +46,7 @@ spg.precedence = []
 @production(spg, 'doc : CONTENT')
 def doc__CONTENT(p):
     c = p[0]
-    return [update_source_pos(ast.Str(s=c.getstr()), c)]
+    return [add_data(update_source_pos(ast.Str(s=c.getstr()), c))]
 
 
 @production(spg,
@@ -60,7 +60,9 @@ def doc__parsed(p):
 @production(spg, 'doc : doc CONTENT')
 def doc__doc_CONTENT(p):
     doc, content = p
-    doc.append(update_source_pos(ast.Str(s=content.getstr()), content))
+    doc.append(
+        add_data(update_source_pos(ast.Str(s=content.getstr()), content))
+    )
     return doc
 
 
@@ -87,11 +89,13 @@ def doc__doc_comment(p):
 @production(spg, 'var : VS CONTENT VE')
 def var__varstart_CONTENT_varend(p):
     content = parsers.fp.parse(lexers.fl.lex(p[1].getstr()))
-    return build_call(
-        func=ast.Name(id='auto_escape', ctx=ast.Load()),
-        args=[
-            content
-        ]
+    return add_data(
+        build_call(
+            func=ast.Name(id='auto_escape', ctx=ast.Load()),
+            args=[
+                update_source_pos(content, p[1])
+            ]
+        )
     )
 
 
@@ -106,10 +110,10 @@ def tag(p):
 def if__impl(p):
     ts, _, condition, _, body, _, _, _ = p
     test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
-    return update_source_pos(ast.IfExp(
+    return update_source_pos(ast.If(
         test=test,
-        body=build_str_join(build_str_list_comp(body)),
-        orelse=ast.Str(s='')
+        body=body,
+        orelse=[]
     ), ts)
 
 
@@ -117,10 +121,10 @@ def if__impl(p):
 def if__else_impl(p):
     ts, _, condition, _, body, _, _, _, orelse, _, _, _ = p
     test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
-    return update_source_pos(ast.IfExp(
+    return update_source_pos(ast.If(
         test=test,
-        body=build_str_join(build_str_list_comp(body)),
-        orelse=build_str_join(build_str_list_comp(orelse)),
+        body=body,
+        orelse=orelse,
     ), ts)
 
 
@@ -131,24 +135,15 @@ def for__impl(p):
     if in_ != 'in':
         raise ValueError('"in" expected in for loop arguments')
     iterator = parsers.fp.parse(lexers.fl.lex(var))
-    loop_body = ast.ListComp(
-        elt=build_str_join(build_str_list_comp(body)),
-        generators=[
-            ast.comprehension(
-                target=ast.Subscript(
-                    value=ast.Name(id='context', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Str(s=target)),
-                    ctx=ast.Store()
-                ),
-                iter=iterator,
-                ifs=[]
-            )
-        ]
-    )
-    return update_source_pos(ast.IfExp(
-        test=iterator,
-        body=build_str_join(loop_body),
-        orelse=ast.Str(s=''),
+    return update_source_pos(ast.For(
+        target=ast.Subscript(
+            value=ast.Name(id='context', ctx=ast.Load()),
+            slice=ast.Index(value=ast.Str(s=target)),
+            ctx=ast.Store()
+        ),
+        iter=iterator,
+        body=body,
+        orelse=[]
     ), ts)
 
 
@@ -161,30 +156,21 @@ def for__else_impl(p):
     if in_ != 'in':
         raise ValueError('"in" expected in for loop arguments')
     iterator = parsers.fp.parse(lexers.fl.lex(var))
-    loop_body = ast.ListComp(
-        elt=build_str_join(build_str_list_comp(body)),
-        generators=[
-            ast.comprehension(
-                target=ast.Subscript(
-                    value=ast.Name(id='context', ctx=ast.Load()),
-                    slice=ast.Index(value=ast.Str(s=target)),
-                    ctx=ast.Store()
-                ),
-                iter=iterator,
-                ifs=[]
-            )
-        ]
-    )
-    return update_source_pos(ast.IfExp(
-        test=iterator,
-        body=build_str_join(loop_body),
-        orelse=build_str_join(build_str_list_comp(orelse)),
+    return update_source_pos(ast.For(
+        target=ast.Subscript(
+            value=ast.Name(id='context', ctx=ast.Load()),
+            slice=ast.Index(value=ast.Str(s=target)),
+            ctx=ast.Store()
+        ),
+        iter=iterator,
+        body=body,
+        orelse=orelse
     ), ts)
 
 
 @production(spg, 'comment : CS CONTENT CE')
 def comment(p):
-    return ast.Str(s='')
+    return ast.Pass()
 
 
 @spg.error
