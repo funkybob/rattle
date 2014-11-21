@@ -33,8 +33,8 @@ The overall rules are::
              |  TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE
 
     for      :  TS FOR CONTENT TE doc TS ENDFOR TE
-             |  TS FOR CONTENT TE doc TS ELSE TE doc TS ENDFOR TE',
-             |  TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE')
+             |  TS FOR CONTENT TE doc TS ELSE TE doc TS ENDFOR TE
+             |  TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE
 
     comment  :  CS CONTENT CE
 
@@ -98,12 +98,12 @@ def var__varstart_CONTENT_varend(p):
 @production(spg,
             'tag : if',
             'tag : for')
-def tag_if(p):
+def tag(p):
     return p[0]
 
 
 @production(spg, 'if : TS IF CONTENT TE doc TS ENDIF TE')
-def tag_if_impl(p):
+def if__impl(p):
     ts, _, condition, _, body, _, _, _ = p
     test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
     return update_source_pos(ast.IfExp(
@@ -114,7 +114,7 @@ def tag_if_impl(p):
 
 
 @production(spg, 'if : TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE')
-def tag_if_else_impl(p):
+def if__else_impl(p):
     ts, _, condition, _, body, _, _, _, orelse, _, _, _ = p
     test = parsers.fp.parse(lexers.fl.lex(condition.getstr()))
     return update_source_pos(ast.IfExp(
@@ -125,7 +125,7 @@ def tag_if_else_impl(p):
 
 
 @production(spg, 'for : TS FOR CONTENT TE doc TS ENDFOR TE')
-def tag_for_impl(p):
+def for__impl(p):
     ts, _, args, _, body, _, _, _ = p
     target, in_, var = split_tag_args_string(args.getstr())
     if in_ != 'in':
@@ -155,7 +155,7 @@ def tag_for_impl(p):
 @production(spg,
             'for : TS FOR CONTENT TE doc TS ELSE TE doc TS ENDFOR TE',
             'for : TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE')
-def tag_for_else_impl(p):
+def for__else_impl(p):
     ts, _, args, _, body, _, _, _, orelse, _, _, _ = p
     target, in_, var = split_tag_args_string(args.getstr())
     if in_ != 'in':

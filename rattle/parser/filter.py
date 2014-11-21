@@ -96,29 +96,29 @@ fpg.precedence = [
 
 
 @production(fpg, 'arg : expr')
-def fpg_arg_expr(p):
+def arg__expr(p):
     return p[0]
 
 
 @production(fpg, 'arg_list : arg')
-def fpg_arg_list_arg(p):
+def arg_list__arg(p):
     return p
 
 
 @production(fpg, 'arg_list : arg_list COMMA arg')
-def fpg_arg_list_append(p):
+def arg_list__append(p):
     arg_list, _, arg = p
     arg_list.append(arg)
     return arg_list
 
 
 @production(fpg, 'expr : literal')
-def fpg_expr_literal(p):
+def expr__literal(p):
     return p[0]
 
 
 @production(fpg, 'expr : expr DOT NAME')
-def fpg_expr_DOT_NAME(p):
+def expr__DOT_NAME(p):
     lterm, _, rterm = p
     return ast.Attribute(
         value=lterm,
@@ -142,7 +142,7 @@ _binop_mapping = {
             'expr : expr MUL expr',
             'expr : expr DIV expr',
             'expr : expr MOD expr')
-def fpg_expr_binop(p):
+def expr__binop(p):
     lterm, op, rterm = p
     operator = _binop_mapping[op.gettokentype()]
     return ast.BinOp(left=lterm, op=operator(), right=rterm)
@@ -157,7 +157,7 @@ _boolop_mapping = {
 @production(fpg,
             'expr : expr AND expr',
             'expr : expr OR expr')
-def fpg_expr_boolop(p):
+def expr__boolop(p):
     lterm, op, rterm = p
     operator = _boolop_mapping[op.gettokentype()]
     return ast.BoolOp(op=operator(), values=[lterm, rterm])
@@ -188,25 +188,25 @@ _cmpop_mapping = {
             'expr : expr NOTIN expr',
             'expr : expr ISNOT expr',
             'expr : expr IS expr')
-def expr_cmpop(p):
+def expr__cmpop(p):
     lterm, op, rterm = p
     operator = _cmpop_mapping[op.gettokentype()]
     return ast.Compare(left=lterm, ops=[operator()], comparators=[rterm])
 
 
 @production(fpg, 'expr : expr filter')
-def fpg_expr_filter(p):
+def expr__expr_filter(p):
     arg, (filter, args, kwargs) = p
     return build_call(filter, [arg] + args, kwargs)
 
 
 @production(fpg, 'expr : LPAREN expr RPAREN')
-def fpg_expr_binop_paren(p):
+def expr__paren(p):
     return p[1]
 
 
 @production(fpg, 'expr : expr LSQB expr RSQB')
-def fpg_expr_SUBSCRIPT(p):
+def expr__subscript(p):
     src, _, subscript, _ = p
     return ast.Subscript(
         value=src,
@@ -216,31 +216,31 @@ def fpg_expr_SUBSCRIPT(p):
 
 
 @production(fpg, 'expr : expr LPAREN RPAREN')
-def fpg_expr_empty_call(p):
+def expr__empty_call(p):
     func, _, _ = p
     return build_call(func)
 
 
 @production(fpg, 'expr : expr LPAREN arg_list RPAREN')
-def fpg_expr_args_call(p):
+def expr__args_call(p):
     func, _, args, _ = p
     return build_call(func, args)
 
 
 @production(fpg, 'expr : expr LPAREN kwarg_list RPAREN')
-def fpg_expr_kwargs_call(p):
+def expr__kwargs_call(p):
     func, _, kwargs, _ = p
     return build_call(func, kwargs=kwargs)
 
 
 @production(fpg, 'expr : expr LPAREN arg_list COMMA kwarg_list RPAREN')
-def fpg_expr_full_call(p):
+def expr__full_call(p):
     func, _, args, _, kwargs, _ = p
     return build_call(func, args, kwargs)
 
 
 @production(fpg, 'filter : PIPE lookup_name COLON literal')
-def fpg_filter_colon_arg(p):
+def filter__colon_arg(p):
     _, filt, _, arg = p
     filter_name = get_lookup_name(filt)
     filter_func = get_filter_func(filter_name)
@@ -248,21 +248,21 @@ def fpg_filter_colon_arg(p):
 
 
 @production(fpg, 'filter : PIPE lookup_name')
-def fpg_filter_pipe_lookup_name(p):
+def filter__pipe_lookupname(p):
     filter_name = get_lookup_name(p[1])
     filter_func = get_filter_func(filter_name)
     return filter_func, [], []
 
 
 @production(fpg, 'filter : PIPE lookup_name LPAREN RPAREN')
-def fpg_filter_pipe_lookup_empty_call(p):
+def filter__pipe_lookupname_empty_call(p):
     filter_name = get_lookup_name(p[1])
     filter_func = get_filter_func(filter_name)
     return filter_func, [], []
 
 
 @production(fpg, 'filter : PIPE lookup_name LPAREN arg_list RPAREN')
-def fpg_filter_pipe_lookup_args_call(p):
+def filter__pipe_lookupname_args_call(p):
     _, filter, _, args, _ = p
     filter_name = get_lookup_name(filter)
     filter_func = get_filter_func(filter_name)
@@ -270,7 +270,7 @@ def fpg_filter_pipe_lookup_args_call(p):
 
 
 @production(fpg, 'filter : PIPE lookup_name LPAREN kwarg_list RPAREN')
-def fpg_filter_pipe_lookup_kwargs_call(p):
+def filter__pipe_lookupname_kwargs_call(p):
     _, filter, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)
     filter_func = get_filter_func(filter_name)
@@ -278,7 +278,7 @@ def fpg_filter_pipe_lookup_kwargs_call(p):
 
 
 @production(fpg, 'filter : PIPE lookup_name LPAREN arg_list COMMA kwarg_list RPAREN')
-def fpg_filter_pipe_lookup_full_call(p):
+def filter__pipe_lookupname_full_call(p):
     _, filter, _, args, _, kwargs, _ = p
     filter_name = get_lookup_name(filter)
     filter_func = get_filter_func(filter_name)
@@ -286,18 +286,18 @@ def fpg_filter_pipe_lookup_full_call(p):
 
 
 @production(fpg, 'kwarg : NAME ASSIGN expr')
-def fpg_kwarg_assignment(p):
+def kwarg__assignment(p):
     name, _, expr = p
     return ast.keyword(arg=name.getstr(), value=expr)
 
 
 @production(fpg, 'kwarg_list : kwarg')
-def fpg_kwarg_list_kwarg(p):
+def kwarg_list__kwarg(p):
     return p
 
 
 @production(fpg, 'kwarg_list : kwarg_list COMMA kwarg')
-def fpg_kwarg_list_append(p):
+def kwarg_list__append(p):
     kwarg_list, _, kwarg = p
     kwarg_list.append(kwarg)
     return kwarg_list
@@ -307,24 +307,24 @@ def fpg_kwarg_list_append(p):
             'literal : name',
             'literal : number',
             'literal : string')
-def fpg_literal(p):
+def literal(p):
     return p[0]
 
 
 @production(fpg, 'lookup_name : NAME')
-def fpg_lookup_name_NAME(p):
+def lookupname__NAME(p):
     return [ast.Str(s=p[0].getstr())]
 
 
 @production(fpg, 'lookup_name : lookup_name DOT NAME')
-def fpg_lookup_name_append(p):
+def lookupname__append(p):
     lookup_name, _, name = p
     lookup_name.append(ast.Str(s=name.getstr()))
     return lookup_name
 
 
 @production(fpg, 'name : NAME')
-def fpg_name_NAME(p):
+def name__NAME(p):
     return ast.Subscript(
         value=ast.Name(id='context', ctx=ast.Load()),
         slice=ast.Index(value=ast.Str(s=p[0].getstr()), ctx=ast.Load()),
@@ -333,7 +333,7 @@ def fpg_name_NAME(p):
 
 
 @production(fpg, 'number : NUMBER')
-def fpg_number_NUMBER(p):
+def number__NUMBER(p):
     number = p[0].getstr()
     if '.' in number or 'e' in number or 'E' in number:
         cast = float
@@ -343,10 +343,10 @@ def fpg_number_NUMBER(p):
 
 
 @production(fpg, 'string : STRING')
-def fpg_string_STRING(p):
+def string__STRING(p):
     return ast.Str(s=p[0].getstr()[1:-1])
 
 
 @fpg.error
-def fpg_error(token):
+def error(token):
     raise ValueError('Unexpected token: %r' % token)
