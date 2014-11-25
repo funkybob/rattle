@@ -4,10 +4,11 @@ import os
 from .lexer import lexers
 from .parser import parsers
 from .utils.astpp import dump as ast_dump
-from .utils.parser import build_str_join
+from .utils.parser import build_call, build_str_join, ParserState
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
+SHOW_CODE = os.environ.get('RATTLE_SHOW_CODE', False)
 
 
 class TemplateSyntaxError(Exception):
@@ -111,6 +112,12 @@ class Template(object):
         ast.fix_missing_locations(code)
         if AST_DEBUG:
             print(ast_dump(code))
+        if SHOW_CODE:
+            try:
+                import codegen
+                print(codegen.to_source(code))
+            except ImportError:
+                pass
         self.func = compile(code, filename="<template>", mode="exec")
 
         self.default_context = {
@@ -124,21 +131,31 @@ class Template(object):
         Convert the parsed tokens into a list of expressions then join them
         """
         tokens = lexers.sl.lex(self.source)
-        parsed = parsers.sp.parse(tokens)
-        parsed.append(
-            ast.Global(names=['rendered'])
-        )
-        parsed.append(
+        state = ParserState()
+        klass = parsers.sp.parse(tokens, state)
+        body = [
+            klass,
+            ast.Global(names=['rendered']),
             ast.Assign(
                 targets=[ast.Name(id='rendered', ctx=ast.Store())],
                 value=build_str_join(
-                    ast.Name(id='output', ctx=ast.Load())
+                    build_call(
+                        ast.Attribute(
+                            value=build_call(
+                                ast.Name(id='Template', ctx=ast.Load())
+                            ),
+                            attr='root',
+                            ctx=ast.Load()
+                        ),
+                        args=[
+                            ast.Name(id='context', ctx=ast.Load())
+                        ],
+                    )
                 )
             )
-        )
-
+        ]
         return ast.Module(
-            body=parsed
+            body=body
         )
 
     def render(self, context={}):

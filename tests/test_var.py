@@ -1,13 +1,7 @@
-import sys
-import unittest
+from rattle import library, PY3
 
-from rattle import library, Template
-
-import tests.filters  # necessary to register test filters
+import tests.filters  # noqa: necessary to register test filters
 from tests.utils import Mock, TemplateTestCase
-
-
-PY3 = sys.version_info[0] == 3
 
 
 def bye_filter(arg1):
