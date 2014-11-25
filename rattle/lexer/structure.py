@@ -6,6 +6,8 @@ slg = lexers.slg
 slg.add('VS', r'\{\{\s*')
 slg.add('VE', r'\s*\}\}')
 
+# we cannot add "\s*" here because CONTENT would then be mached instead of e.g.
+# "if" or "for"
 slg.add('TS', r'\{%')
 slg.add('TE', r'\s*%\}')
 

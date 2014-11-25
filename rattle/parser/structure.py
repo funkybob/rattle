@@ -29,12 +29,12 @@ The overall rules are::
     tag      :  if
              |  for
 
-    if       :  TS IF CONTENT TE doc TS ENDIF TE
-             |  TS IF CONTENT TE doc TS ELSE TE doc TS ENDIF TE
+    if       :  TS IF CONTENT TE inner TS ENDIF TE
+             |  TS IF CONTENT TE inner TS ELSE TE inner TS ENDIF TE
 
-    for      :  TS FOR CONTENT TE doc TS ENDFOR TE
-             |  TS FOR CONTENT TE doc TS ELSE TE doc TS ENDFOR TE
-             |  TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE
+    for      :  TS FOR CONTENT TE inner TS ENDFOR TE
+             |  TS FOR CONTENT TE inner TS ELSE TE inner TS ENDFOR TE
+             |  TS FOR CONTENT TE inner TS EMPTY TE inner TS ENDFOR TE
 
     comment  :  CS CONTENT CE
 
