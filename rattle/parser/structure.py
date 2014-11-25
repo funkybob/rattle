@@ -10,8 +10,8 @@ spg = parsers.spg
 """
 Structure parser generator.
 
-Useed to tokenize and split the template at ``{{``, ``{%``, ``{#``, ``}}``,
-``%}`` and ``#}``
+Used to tokenize and split the template at ``{{``, ``}}``, ``{%``, ``%}``,
+``{#`` and ``#}``.
 
 The overall rules are::
 
@@ -37,6 +37,15 @@ The overall rules are::
              |  TS FOR CONTENT TE doc TS EMPTY TE doc TS ENDFOR TE
 
     comment  :  CS CONTENT CE
+
+    inner    :  CONTENT
+             |  var
+             |  tag
+             |  comment
+             |  inner CONTENT
+             |  inner var
+             |  inner tag
+             |  inner comment
 
 """
 

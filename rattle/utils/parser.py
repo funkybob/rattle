@@ -4,12 +4,20 @@ from rattle import PY3
 
 
 class ParserState(object):
+    """
+    Used to keep state information during template parsing, e.g. current block.
+    """
 
     def __init__(self):
         self.blocks = []
-        self.klass = None
 
     def append_to_block(self, value):
+        """
+        Appends the given value to the body of the currently active block
+        function.
+
+        :param value: A :class:`ast.stmt` node.
+        """
         self.blocks[-1].body.append(value)
 
 
@@ -34,19 +42,6 @@ def production(generator, *rules):
         func.__doc__ = '\n'.join(docstring)
         return func
     return wrapper
-
-
-def add_data(s):
-    return ast.Expr(
-        value=build_call(
-            func=ast.Attribute(
-                value=ast.Name(id='output', ctx=ast.Load()),
-                attr='append',
-                ctx=ast.Load()
-            ),
-            args=[s]
-        )
-    )
 
 
 def build_call(func, args=[], kwargs=[]):
@@ -74,6 +69,19 @@ def build_call(func, args=[], kwargs=[]):
 
 
 def build_class():
+    """
+    Constructs a :class:`ast.ClassDef` node that wraps the entire template
+    file. The class will have an entry function ``root`` with:
+
+    .. function:: root(context)
+
+        Starts the template parsing with the given context.
+
+        :returns: Returns a generator of strings that can be joined to the
+            rendered template.
+
+    :returns: a 2-tuple with the class and the entry function
+    """
     args = {}
     if PY3:
         args.update({
@@ -97,7 +105,11 @@ def build_class():
             defaults=[],
             **args
         ),
-        body=[],
+        body=[
+            # we add an empty string to guarantee for a string and generator on
+            # root level
+            build_yield(ast.Str(s=''))
+        ],
         decorator_list=[]
     )
     klass = ast.ClassDef(
@@ -132,6 +144,20 @@ def build_str_join(l):
 
 
 def build_yield(value):
+    """
+    Constructs a :class:`ast.Yield` expression to be used in the block
+    functions.
+
+    This is equivalent to::
+
+        yield value
+
+    :param ast.expr value: Any AST `expr` node (e.g. :class:`ast.Str`,
+        :class:`ast.Call`) that is or returns a string.
+    :returns: A yield expression (``ast.Expr(ast.Yield(value))``) with the
+        given value.
+    :rtype: :class:`ast.Expr`
+    """
     return ast.Expr(value=ast.Yield(value=value))
 
 
