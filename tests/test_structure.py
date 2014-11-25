@@ -1,11 +1,4 @@
-import sys
-
-from rattle import Template
-
 from tests.utils import TemplateTestCase
-
-
-PY3 = sys.version_info[0] == 3
 
 
 class CommentTest(TemplateTestCase):
@@ -200,7 +193,7 @@ class ForEmptyTest(TemplateTestCase):
             self.assertRendered(src, expect, ctx)
 
     def test_for_empty_replacement(self):
-        ctx = {'b': [], 'c':'x'}
+        ctx = {'b': [], 'c': 'x'}
         TESTS = (
             ('{% for a in b %}.{% empty %}{{ c }}{{ c }}{% endfor %}', 'xx'),
             ('{% for a in b %}.{% empty %}{{ c }}{% endfor %} world', 'x world'),
@@ -226,7 +219,7 @@ class ForEmptyTest(TemplateTestCase):
             self.assertRendered(src, expect, ctx)
 
     def test_for_else_replacement(self):
-        ctx = {'b': [], 'c':'x'}
+        ctx = {'b': [], 'c': 'x'}
         TESTS = (
             ('{% for a in b %}.{% else %}{{ c }}{% endfor %}', 'x'),
             ('{% for a in b %}.{% else %}{{ c }}{% endfor %} world', 'x world'),

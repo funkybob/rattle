@@ -1,5 +1,17 @@
 import ast
 
+from rattle import PY3
+
+
+class ParserState(object):
+
+    def __init__(self):
+        self.blocks = []
+        self.klass = None
+
+    def append_to_block(self, value):
+        self.blocks[-1].body.append(value)
+
 
 def production(generator, *rules):
     """
@@ -22,6 +34,19 @@ def production(generator, *rules):
         func.__doc__ = '\n'.join(docstring)
         return func
     return wrapper
+
+
+def add_data(s):
+    return ast.Expr(
+        value=build_call(
+            func=ast.Attribute(
+                value=ast.Name(id='output', ctx=ast.Load()),
+                attr='append',
+                ctx=ast.Load()
+            ),
+            args=[s]
+        )
+    )
 
 
 def build_call(func, args=[], kwargs=[]):
@@ -48,6 +73,45 @@ def build_call(func, args=[], kwargs=[]):
     )
 
 
+def build_class():
+    args = {}
+    if PY3:
+        args.update({
+            'args': [
+                ast.arg(arg='self', annotation=None),
+                ast.arg(arg='context', annotation=None),
+            ],
+            'kwonlyargs': [],
+            'kw_defaults': [],
+        })
+    else:
+        args['args'] = [
+            ast.Name(id='self', ctx=ast.Param()),
+            ast.Name(id='context', ctx=ast.Param())
+        ]
+    root_func = ast.FunctionDef(
+        name='root',
+        args=ast.arguments(
+            vararg=None,
+            kwarg=None,
+            defaults=[],
+            **args
+        ),
+        body=[],
+        decorator_list=[]
+    )
+    klass = ast.ClassDef(
+        name='Template',
+        bases=[ast.Name(id='object', ctx=ast.Load())],
+        keywords=[],
+        starargs=None,
+        kwargs=None,
+        body=[root_func],
+        decorator_list=[]
+    )
+    return klass, root_func
+
+
 def build_str_join(l):
     """
     Constructs a :class:`ast.Call` that joins all elements of ``l`` with an
@@ -67,38 +131,8 @@ def build_str_join(l):
     )
 
 
-def build_str_list_comp(l):
-    """
-    Casts every element in l to ``str``.
-
-    This is equivalent to::
-
-        if isinstance(l, str):
-            return l
-        if not isinstance(l, list):
-            l = [l]
-        [str(x) for x in l]
-
-    """
-    if isinstance(l, ast.Str):
-        return l
-    if not isinstance(l, list):
-        l = [l]
-    return ast.ListComp(
-        elt=build_call(
-            ast.Name(id='str', ctx=ast.Load()),
-            args=[
-                ast.Name(id='x', ctx=ast.Load()),
-            ],
-        ),
-        generators=[
-            ast.comprehension(
-                target=ast.Name(id='x', ctx=ast.Store()),
-                iter=ast.List(elts=l, ctx=ast.Load()),
-                ifs=[]
-            )
-        ]
-    )
+def build_yield(value):
+    return ast.Expr(value=ast.Yield(value=value))
 
 
 def get_filter_func(name):

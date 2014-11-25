@@ -4,10 +4,11 @@ import os
 from .lexer import lexers
 from .parser import parsers
 from .utils.astpp import dump as ast_dump
-from .utils.parser import build_str_list_comp
+from .utils.parser import build_call, build_str_join, ParserState
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)
+SHOW_CODE = os.environ.get('RATTLE_SHOW_CODE', False)
 
 
 class TemplateSyntaxError(Exception):
@@ -111,7 +112,13 @@ class Template(object):
         ast.fix_missing_locations(code)
         if AST_DEBUG:
             print(ast_dump(code))
-        self.func = compile(code, filename="<template>", mode="eval")
+        if SHOW_CODE:
+            try:
+                import codegen
+                print(codegen.to_source(code))
+            except ImportError:
+                pass
+        self.func = compile(code, filename="<template>", mode="exec")
 
         self.default_context = {
             'True': True,
@@ -124,9 +131,31 @@ class Template(object):
         Convert the parsed tokens into a list of expressions then join them
         """
         tokens = lexers.sl.lex(self.source)
-        parsed = parsers.sp.parse(tokens)
-        return ast.Expression(
-            body=build_str_list_comp(parsed)
+        state = ParserState()
+        klass = parsers.sp.parse(tokens, state)
+        body = [
+            klass,
+            ast.Global(names=['rendered']),
+            ast.Assign(
+                targets=[ast.Name(id='rendered', ctx=ast.Store())],
+                value=build_str_join(
+                    build_call(
+                        ast.Attribute(
+                            value=build_call(
+                                ast.Name(id='Template', ctx=ast.Load())
+                            ),
+                            attr='root',
+                            ctx=ast.Load()
+                        ),
+                        args=[
+                            ast.Name(id='context', ctx=ast.Load())
+                        ],
+                    )
+                )
+            )
+        ]
+        return ast.Module(
+            body=body
         )
 
     def render(self, context={}):
@@ -137,7 +166,10 @@ class Template(object):
             'compiled_tags': self.compiled_tags,
             'filters': library.filters,
             'auto_escape': auto_escape,
+            'output': [],
+            'rendered': None
         }
         local_ctx = {
         }
-        return u''.join(eval(self.func, global_ctx, local_ctx))
+        eval(self.func, global_ctx, local_ctx)
+        return global_ctx['rendered']
