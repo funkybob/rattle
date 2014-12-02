@@ -1,10 +1,8 @@
-import os
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 
-def read(fname):
-    with open(os.path.join(os.path.dirname(__file__), fname)) as fin:
-        return fin.read()
+with open('README.rst') as f:
+    readme = f.read()
 
 
 setup(
@@ -15,7 +13,7 @@ setup(
     license='MIT',
     url='https://github.com/funkybob/rattle',
     packages=find_packages(),
-    long_description=read('README.md'),
+    long_description=readme,
     install_requires=[
         'rply>=0.7.2',
     ],
