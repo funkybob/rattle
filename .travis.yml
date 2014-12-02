@@ -1,14 +1,19 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "pypy"
-  - "pypy3"
+python: 2.7
+
+env:
+    - TOX_ENV=py27
+    - TOX_ENV=py32
+    - TOX_ENV=py33
+    - TOX_ENV=py34
+    - TOX_ENV=pypy
+    - TOX_ENV=pypy3
+    - TOX_ENV=docs
+    - TOX_ENV=pep8
 
 install:
-  - pip install -e .
+    - pip install tox
 
 script:
-  - python -m unittest discover -v
+    - ./.travis/run.sh

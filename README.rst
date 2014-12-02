@@ -1,5 +1,10 @@
-[![Build Status](https://travis-ci.org/funkybob/rattle.svg?branch=master)](https://travis-ci.org/funkybob/rattle)
-[![Documentation Status](https://readthedocs.org/projects/rattle/badge/?version=latest)](https://readthedocs.org/projects/rattle/?badge=latest)
+.. image:: https://travis-ci.org/funkybob/rattle.png
+    :alt: Build Status
+    :target: https://travis-ci.org/funkybob/rattle
+
+.. image:: https://readthedocs.org/projects/rattle/badge/?version=latest
+    :alt: Documentation Status
+    :target: https://readthedocs.org/projects/rattle/?badge=latest)
 
 rattle
 ======

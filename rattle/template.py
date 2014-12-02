@@ -4,7 +4,7 @@ import os
 from .lexer import lexers
 from .parser import parsers
 from .utils.astpp import dump as ast_dump
-from .utils.parser import build_call, build_str_join, ParserState
+from .utils.parser import ParserState, build_call, build_str_join
 
 
 AST_DEBUG = os.environ.get('RATTLE_AST_DEBUG', False)

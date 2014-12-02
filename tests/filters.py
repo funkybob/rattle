@@ -1,5 +1,6 @@
 from rattle.template import library
 
+
 @library.register_filter
 def join(value, sep):
     return sep.join(value)

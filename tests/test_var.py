@@ -1,4 +1,4 @@
-from rattle import library, PY3
+from rattle import PY3, library
 
 import tests.filters  # noqa: necessary to register test filters
 from tests.utils import Mock, TemplateTestCase
