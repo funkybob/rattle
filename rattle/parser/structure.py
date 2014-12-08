@@ -220,5 +220,5 @@ def inner__inner_comment(state, p):
 
 
 @spg.error
-def error(token):
+def error(state, token):
     raise ValueError('Unexpected token: %r' % token)
